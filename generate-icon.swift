@@ -121,7 +121,8 @@ func drawIcon(size: CGFloat) -> NSImage {
 
 // MARK: - Generate iconset
 
-let iconsetPath = "/Users/silvio.pavanetto/Documents/WhisperNotes/AppIcon.iconset"
+let projectDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+let iconsetPath = projectDir.appendingPathComponent("AppIcon.iconset").path
 let fm = FileManager.default
 try? fm.removeItem(atPath: iconsetPath)
 try! fm.createDirectory(atPath: iconsetPath, withIntermediateDirectories: true)
@@ -156,7 +157,7 @@ print("\nConverting to .icns...")
 let process = Process()
 process.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
 process.arguments = ["-c", "icns", iconsetPath, "-o",
-                     "/Users/silvio.pavanetto/Documents/WhisperNotes/Resources/AppIcon.icns"]
+                     projectDir.appendingPathComponent("Resources/AppIcon.icns").path]
 try! process.run()
 process.waitUntilExit()
 
