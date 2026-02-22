@@ -15,10 +15,8 @@ Record, transcribe, organize — all on your machine. No cloud. No subscription.
 <br/>
 
 <p align="center">
-  <img src="docs/images/main-window.png" alt="WhisperNotes main window" width="660"/>
+  <img src="docs/images/hero.png" alt="WhisperNotes main window" width="720"/>
 </p>
-
-<br/>
 
 WhisperNotes is a native macOS app that turns audio recordings into searchable, organized text using [whisper.cpp](https://github.com/ggerganov/whisper.cpp). Built entirely with Swift and SwiftUI — no Electron, no web views, no external dependencies. Just a fast, lightweight Mac app that respects your privacy.
 
@@ -37,32 +35,27 @@ Most transcription tools send your audio to someone else's server. WhisperNotes 
 
 ## Features
 
-### Record & Transcribe
-One-click recording with live waveform visualization. Transcription runs locally via whisper.cpp — supports 30 languages with automatic detection.
+### Record & Organize
+
+One-click recording with live waveform visualization. Organize with custom folders, color-coded tags, favorites, and full-text search. Drag and drop transcriptions between folders.
 
 <p align="center">
-  <img src="docs/images/recording.png" alt="Recording view with waveform" width="340"/>
-</p>
-
-### Organize Everything
-Three-column layout with folders, color-coded tags, favorites, and full-text search. Smart folders automatically group recent and uncategorized notes. Drag and drop transcriptions between folders.
-
-<p align="center">
-  <img src="docs/images/organize.png" alt="Organization with folders and tags" width="280"/>
+  <img src="docs/images/features.png" alt="Recording and organization" width="580"/>
 </p>
 
 ### Markdown Sync
-Every transcription is automatically saved as a `.md` file with YAML frontmatter. Works as an Obsidian vault out of the box.
+
+Every transcription is automatically saved as a `.md` file with YAML frontmatter. Works as an Obsidian vault out of the box — just point Obsidian at your notes folder.
 
 <p align="center">
-  <img src="docs/images/markdown-sync.png" alt="Markdown file output" width="560"/>
+  <img src="docs/images/markdown-export.png" alt="Markdown files in Finder" width="620"/>
 </p>
 
 ### And More
 
+- **30 languages** — Set a default or choose per-recording. Auto-detect works great for most cases.
 - **Keyboard-driven** — `Cmd+N` record, `Cmd+Shift+N` new folder, `Cmd+S` save, `Cmd+F` search, `Cmd+D` favorite
 - **Edit in place** — Modify titles and transcription text directly in the app with autosave
-- **30 languages** — Set a default or choose per-recording. Auto-detect works great for most cases.
 - **Smart folders** — All, Favorites, Recent (last 7 days), and Uncategorized — always up to date
 
 ---
