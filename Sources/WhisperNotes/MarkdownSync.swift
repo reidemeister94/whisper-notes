@@ -6,7 +6,11 @@ struct MarkdownSync {
     init(baseURL: URL? = nil) {
         self.baseURL = baseURL ?? FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Documents/Whisper Notes", isDirectory: true)
-        try? FileManager.default.createDirectory(at: self.baseURL, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: self.baseURL, withIntermediateDirectories: true)
+        } catch {
+            print("MarkdownSync: failed to create base directory \(self.baseURL.path): \(error)")
+        }
     }
 
     // MARK: - Write
@@ -28,7 +32,11 @@ struct MarkdownSync {
         }
 
         let dir = resolveDir(folderName)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            print("MarkdownSync: failed to create directory for write \(dir.lastPathComponent): \(error)")
+        }
 
         let filename = sanitize(transcription.title) + ".md"
         let fileURL = dir.appendingPathComponent(filename)
@@ -72,13 +80,21 @@ struct MarkdownSync {
 
     func createFolderDir(_ name: String) {
         let dir = baseURL.appendingPathComponent(sanitize(name), isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            print("MarkdownSync: failed to create folder directory \(dir.lastPathComponent): \(error)")
+        }
     }
 
     func renameFolderDir(from oldName: String, to newName: String) {
         let oldDir = baseURL.appendingPathComponent(sanitize(oldName), isDirectory: true)
         let newDir = baseURL.appendingPathComponent(sanitize(newName), isDirectory: true)
-        try? FileManager.default.moveItem(at: oldDir, to: newDir)
+        do {
+            try FileManager.default.moveItem(at: oldDir, to: newDir)
+        } catch {
+            print("MarkdownSync: failed to rename folder \(oldDir.lastPathComponent) → \(newDir.lastPathComponent): \(error)")
+        }
     }
 
     func deleteFolderDir(_ name: String) {
@@ -86,10 +102,14 @@ struct MarkdownSync {
         if let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
             for file in files where file.pathExtension == "md" {
                 let dest = baseURL.appendingPathComponent(file.lastPathComponent)
-                try? FileManager.default.moveItem(at: file, to: dest)
+                do {
+                    try FileManager.default.moveItem(at: file, to: dest)
+                } catch {
+                    print("MarkdownSync: failed to move \(file.lastPathComponent) out of deleted folder: \(error)")
+                }
             }
         }
-        try? FileManager.default.removeItem(at: dir)
+        try? FileManager.default.removeItem(at: dir) // Cleanup: OK to be silent
     }
 
     // MARK: - Helpers

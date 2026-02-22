@@ -268,9 +268,10 @@ public final class AppState: ObservableObject {
                 )
             } catch {
                 print("Transcription error: \(error)")
-                errorMessage = "Transcription failed: \(error.localizedDescription)"
+                errorMessage = "Transcription failed: \(error.localizedDescription). "
+                    + "A note was created with the audio file — you can retry transcription later."
                 createTranscription(
-                    title: title, content: "[Transcription failed: \(error.localizedDescription)]",
+                    title: title, content: "",
                     folderId: folderId, duration: duration, audioFilename: audioFilename
                 )
             }

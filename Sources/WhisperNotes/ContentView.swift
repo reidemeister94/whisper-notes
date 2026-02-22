@@ -21,9 +21,9 @@ public struct ContentView: View {
         }
         .sheet(isPresented: $state.showRecording, onDismiss: {
             state.reload()
-        }) {
+        }, content: {
             RecordingView()
-        }
+        })
         .alert(
             "Delete Transcription",
             isPresented: Binding(
@@ -103,6 +103,7 @@ struct EmptyDetailView: View {
             .tint(.red)
             .controlSize(.large)
             .padding(.top, 4)
+            .accessibilityHint("Opens the recording dialog to capture and transcribe audio")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

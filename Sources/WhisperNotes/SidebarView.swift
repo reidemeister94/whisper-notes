@@ -178,6 +178,8 @@ struct SidebarView: View {
                         }
                         .menuStyle(.borderlessButton)
                         .frame(width: 24)
+                        .accessibilityLabel("Tag color")
+                        .accessibilityHint("Choose a color for the new tag")
                     }
                 }
             } header: {

@@ -1,13 +1,16 @@
 import Foundation
 import SQLite3
 
-final class Database {
+public final class Database {
     private var db: OpaquePointer?
     let path: String
 
     init() {
         guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            fatalError("Application Support directory unavailable")
+            fatalError(
+                "Application Support directory unavailable. "
+                    + "FileManager.urls(for:in:) returned empty for .applicationSupportDirectory."
+            )
         }
         let dir = support.appendingPathComponent("WhisperNotes", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -20,9 +23,28 @@ final class Database {
         openAndConfigure()
     }
 
+    /// Returns true if the Application Support directory is accessible and writable.
+    public static func preflightCheck() -> Bool {
+        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return false
+        }
+        let dir = support.appendingPathComponent("WhisperNotes", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            return false
+        }
+        return FileManager.default.isWritableFile(atPath: dir.path)
+    }
+
     private func openAndConfigure() {
-        guard sqlite3_open(path, &db) == SQLITE_OK else {
-            fatalError("Cannot open database at \(path)")
+        let rc = sqlite3_open(path, &db)
+        guard rc == SQLITE_OK else {
+            let errorMsg = db.map { String(cString: sqlite3_errmsg($0)) } ?? "unknown"
+            fatalError(
+                "Cannot open database at \(path). "
+                    + "SQLite error \(rc): \(errorMsg)"
+            )
         }
         sqlite3_exec(db, "PRAGMA journal_mode=WAL", nil, nil, nil)
         sqlite3_exec(db, "PRAGMA foreign_keys=ON", nil, nil, nil)
@@ -313,6 +335,8 @@ final class Database {
     }
 
     private func syncTags(transcriptionId: UUID, tags: [Tag]) {
+        sqlite3_exec(db, "BEGIN", nil, nil, nil)
+
         let del = "DELETE FROM transcription_tags WHERE transcription_id = ?"
         if let stmt = prepare(del) {
             bind(stmt, index: 1, value: transcriptionId.uuidString)
@@ -328,5 +352,7 @@ final class Database {
                 sqlite3_finalize(stmt)
             }
         }
+
+        sqlite3_exec(db, "COMMIT", nil, nil, nil)
     }
 }

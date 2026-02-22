@@ -68,6 +68,8 @@ public struct LanguageSetupView: View {
                 .onTapGesture {
                     state.language = lang.code
                 }
+                .accessibilityAddTraits(state.language == lang.code ? .isSelected : [])
+                .accessibilityHint("Select \(lang.name) as transcription language")
             }
             .listStyle(.plain)
             .frame(maxHeight: 260)

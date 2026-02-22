@@ -12,31 +12,37 @@ public struct SettingsView: View {
                     TextField("whisper-cli path", text: $state.whisperPath)
                         .textFieldStyle(.roundedBorder)
                     Button("Browse") { browse(for: \.whisperPath) }
+                        .accessibilityHint("Open file picker to locate whisper-cli binary")
                 }
                 HStack {
                     TextField("Model path", text: $state.modelPath)
                         .textFieldStyle(.roundedBorder)
                     Button("Browse") { browse(for: \.modelPath) }
+                        .accessibilityHint("Open file picker to locate whisper model file")
                 }
 
                 HStack {
                     if FileManager.default.fileExists(atPath: state.whisperPath) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
+                            .accessibilityHidden(true)
                         Text("whisper-cli found")
                     } else {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.red)
+                            .accessibilityHidden(true)
                         Text("whisper-cli not found")
                     }
                     Spacer()
                     if FileManager.default.fileExists(atPath: state.modelPath) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
+                            .accessibilityHidden(true)
                         Text("Model found")
                     } else {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.red)
+                            .accessibilityHidden(true)
                         Text("Model not found")
                     }
                 }
@@ -69,6 +75,7 @@ public struct SettingsView: View {
                             }
                         }
                     }
+                    .accessibilityHint("Open folder picker to choose notes storage location")
                 }
                 Text("Markdown files are saved here")
                     .font(.caption)

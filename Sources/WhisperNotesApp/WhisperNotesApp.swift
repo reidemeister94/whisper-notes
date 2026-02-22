@@ -1,9 +1,24 @@
+import AppKit
 import SwiftUI
 import WhisperNotesLib
 
 @main
 struct WhisperNotesApp: App {
-    @StateObject private var appState = AppState()
+    @StateObject private var appState: AppState
+
+    init() {
+        if !Database.preflightCheck() {
+            let alert = NSAlert()
+            alert.messageText = "Cannot Initialize Database"
+            alert.informativeText = "WhisperNotes cannot access its data directory in Application Support. "
+                + "Please check disk permissions and available storage, then relaunch."
+            alert.alertStyle = .critical
+            alert.addButton(withTitle: "Quit")
+            alert.runModal()
+            NSApp.terminate(nil)
+        }
+        _appState = StateObject(wrappedValue: AppState())
+    }
 
     private var isFolderSelected: Bool {
         if case let .folder(id) = appState.sidebarSelection,

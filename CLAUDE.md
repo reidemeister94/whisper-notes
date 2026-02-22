@@ -42,11 +42,15 @@ make help            # Show all targets
 | File | Role |
 |------|------|
 | `AppState.swift` | Centralized state management (single ObservableObject) |
-| `Database.swift` | SQLite3 layer — WAL mode, foreign keys, batch tag queries |
+| `Database.swift` | SQLite3 layer — WAL mode, foreign keys, batch tag queries, preflight check |
 | `WhisperService.swift` | Runs whisper-cli as subprocess, parses output |
-| `MarkdownSync.swift` | Writes/reads .md files with YAML frontmatter |
+| `MarkdownSync.swift` | Writes/reads .md files with YAML frontmatter (with error logging) |
 | `Models.swift` | Data models: Transcription, Folder, Tag, SidebarSelection, SupportedLanguage |
 | `ContentView.swift` | Root 3-column NavigationSplitView |
+| `TranscriptionDetailView.swift` | Transcription editor with debounced autosave |
+| `TagPickerView.swift` | Tag assignment popover (SnippetsLab style) |
+| `ToolbarIconButton.swift` | Reusable icon button with accessibility |
+| `FlowLayout.swift` | Flow layout for tag pill wrapping |
 | `RecordingView.swift` | Recording modal with waveform animation + language override |
 | `SettingsView.swift` | App settings including language selection |
 | `LanguageSetupView.swift` | First-launch language selection onboarding |
@@ -55,11 +59,12 @@ make help            # Show all targets
 
 - **No external dependencies** — only system frameworks (SwiftUI, AVFoundation, SQLite3)
 - **State pattern** — single `AppState` ObservableObject, views use `@EnvironmentObject`
-- **Database** — raw SQLite3 C API, no ORM. WAL journal mode. Foreign keys enabled
+- **Database** — raw SQLite3 C API, no ORM. WAL journal mode. Foreign keys enabled. Tag sync wrapped in BEGIN/COMMIT transaction. Pre-flight check validates directory access at launch.
 - **Markdown sync** — every transcription save also writes a `.md` file. One-way sync (app → filesystem); SQLite is the sole source of truth. Filesystem changes (deleting .md files in Finder) are NOT reflected back to the app.
 - **UI** — 3-column NavigationSplitView (sidebar | list | detail). Sidebar `Section` views use `isExpanded:` bindings for reliable rendering when data changes dynamically.
 - **Process execution** — whisper-cli runs via Foundation `Process` with timeout
 - **Language** — Default "auto" (auto-detect). Selectable at first launch, in Settings, and per-recording. 30 languages supported via `SupportedLanguage` model. Persisted in UserDefaults.
+- **Autosave** — Detail view uses debounced dirty-flag autosave (3 seconds after last edit). Timer resets on each keystroke, preventing writes during active typing.
 - **Testability** — Library/executable split enables `@testable import WhisperNotesLib`. Database accepts `init(path:)` for temp DBs. AppState accepts `init(db:mdSync:)` for dependency injection.
 
 ## Keyboard Shortcuts

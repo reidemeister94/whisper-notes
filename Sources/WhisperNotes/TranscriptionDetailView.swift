@@ -8,6 +8,7 @@ struct TranscriptionDetailView: View {
     @State private var editContent = ""
     @State private var editingId: UUID?
     @State private var showTagPicker = false
+    @State private var autosaveTask: Task<Void, Never>?
     @FocusState private var isContentFocused: Bool
 
     private static let dateFormatter: DateFormatter = {
@@ -159,6 +160,7 @@ struct TranscriptionDetailView: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
                         .keyboardShortcut("s", modifiers: .command)
+                        .accessibilityHint("Save pending changes to title and content")
                 }
             }
             .padding(.horizontal, 20)
@@ -176,16 +178,21 @@ struct TranscriptionDetailView: View {
             editingId = newId
             loadFields()
         }
+        .onChange(of: editTitle) { _, _ in scheduleAutosave() }
+        .onChange(of: editContent) { _, _ in scheduleAutosave() }
+        .onDisappear { autosaveTask?.cancel() }
     }
 
     // MARK: - Helpers
 
     private func loadFields() {
+        autosaveTask?.cancel()
         editTitle = transcription.title
         editContent = transcription.content
     }
 
     private func save() {
+        autosaveTask?.cancel()
         var updated = transcription
         updated.title = editTitle
         updated.content = editContent
@@ -193,12 +200,23 @@ struct TranscriptionDetailView: View {
     }
 
     private func autoSavePrevious(prevId: UUID) {
+        autosaveTask?.cancel()
         guard let prev = state.transcriptions.first(where: { $0.id == prevId }) else { return }
         if prev.title != editTitle || prev.content != editContent {
             var updated = prev
             updated.title = editTitle
             updated.content = editContent
             state.updateTranscription(updated)
+        }
+    }
+
+    private func scheduleAutosave() {
+        autosaveTask?.cancel()
+        guard hasUnsavedChanges else { return }
+        autosaveTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled, hasUnsavedChanges else { return }
+            save()
         }
     }
 
@@ -233,205 +251,5 @@ struct TranscriptionDetailView: View {
         var dir = URL(fileURLWithPath: state.notesPath)
         if let f = folderName { dir = dir.appendingPathComponent(f) }
         NSWorkspace.shared.open(dir)
-    }
-}
-
-// MARK: - Toolbar icon button
-
-struct ToolbarIconButton: View {
-    let icon: String
-    var color: Color?
-    var help: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.body)
-                .foregroundStyle(color ?? .secondary)
-                .frame(width: 32, height: 32)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(help)
-        .accessibilityLabel(help)
-    }
-}
-
-// MARK: - Tag Picker (SnippetsLab style)
-
-struct TagPickerView: View {
-    let transcription: Transcription
-    @EnvironmentObject var state: AppState
-    @State private var inputText = ""
-
-    private var assignedTags: [Tag] {
-        transcription.tags
-    }
-
-    private var suggestions: [Tag] {
-        let assigned = Set(transcription.tags.map(\.id))
-        var available = state.tags.filter { !assigned.contains($0.id) }
-        if !inputText.isEmpty {
-            let q = inputText.lowercased()
-            available = available.filter { $0.name.lowercased().contains(q) }
-        }
-        return available
-    }
-
-    private var canCreateNew: Bool {
-        let q = inputText.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !q.isEmpty else { return false }
-        return !state.tags.contains { $0.name.lowercased() == q }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Assign tags")
-                .font(.headline)
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-
-            // Assigned tags + input (SnippetsLab style)
-            FlowLayout(spacing: 4) {
-                ForEach(assignedTags) { tag in
-                    HStack(spacing: 3) {
-                        Text(tag.name)
-                            .font(.caption)
-                        Button {
-                            state.removeTag(tag, from: transcription)
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 8, weight: .bold))
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Remove \(tag.name)")
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.secondary.opacity(0.2))
-                    .clipShape(Capsule())
-                }
-
-                TextField("Add tag...", text: $inputText)
-                    .textFieldStyle(.plain)
-                    .font(.caption)
-                    .frame(minWidth: 60)
-                    .onSubmit {
-                        createAndAssign()
-                    }
-            }
-            .padding(10)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.secondary.opacity(0.1))
-            )
-            .padding(.horizontal, 16)
-
-            // Suggestions
-            if !suggestions.isEmpty || canCreateNew {
-                Text("Suggestions")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 16)
-
-                FlowLayout(spacing: 4) {
-                    if canCreateNew {
-                        Button {
-                            createAndAssign()
-                        } label: {
-                            HStack(spacing: 3) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 8, weight: .bold))
-                                Text(inputText)
-                                    .font(.caption)
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(.blue.opacity(0.2))
-                            .foregroundStyle(.blue)
-                            .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    ForEach(suggestions) { tag in
-                        Button {
-                            state.addTag(tag, to: transcription)
-                        } label: {
-                            Text(tag.name)
-                                .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(.secondary.opacity(0.15))
-                                .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 16)
-            }
-
-            Spacer()
-        }
-    }
-
-    private func createAndAssign() {
-        let name = inputText.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return }
-
-        if let existing = state.tags.first(where: { $0.name.lowercased() == name.lowercased() }) {
-            state.addTag(existing, to: transcription)
-        } else {
-            let color = Tag.presetColors.randomElement() ?? Tag.presetColors[4]
-            let newTag = state.createTag(name: name, color: color)
-            state.addTag(newTag, to: transcription)
-        }
-        inputText = ""
-    }
-}
-
-// MARK: - Flow Layout for tag pills
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 4
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
-        let result = arrange(proposal: proposal, subviews: subviews)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
-        let result = arrange(proposal: proposal, subviews: subviews)
-        for (index, position) in result.positions.enumerated() {
-            subviews[index].place(
-                at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
-                proposal: .unspecified
-            )
-        }
-    }
-
-    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
-        let maxWidth = proposal.width ?? .infinity
-        var positions: [CGPoint] = []
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var rowHeight: CGFloat = 0
-        var totalHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > maxWidth, x > 0 {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
-            positions.append(CGPoint(x: x, y: y))
-            rowHeight = max(rowHeight, size.height)
-            x += size.width + spacing
-            totalHeight = y + rowHeight
-        }
-
-        return (CGSize(width: maxWidth, height: totalHeight), positions)
     }
 }
