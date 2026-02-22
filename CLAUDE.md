@@ -53,7 +53,8 @@ make help            # Show all targets
 | `FlowLayout.swift` | Flow layout for tag pill wrapping |
 | `RecordingView.swift` | Recording modal with waveform animation + language override |
 | `SettingsView.swift` | App settings including language selection |
-| `LanguageSetupView.swift` | First-launch language selection onboarding |
+| `WelcomeView.swift` | Apple-style first-launch welcome dialog with feature highlights |
+| `LanguageSetupView.swift` | Two-step onboarding: welcome page → language selection |
 
 ## Architecture & Conventions
 

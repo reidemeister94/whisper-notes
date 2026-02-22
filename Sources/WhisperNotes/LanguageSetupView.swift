@@ -3,6 +3,7 @@ import SwiftUI
 public struct LanguageSetupView: View {
     @EnvironmentObject var state: AppState
     @State private var searchText = ""
+    @State private var showingLanguageStep = false
     @Environment(\.dismiss) private var dismiss
 
     public init() {}
@@ -16,18 +17,36 @@ public struct LanguageSetupView: View {
     }
 
     public var body: some View {
+        ZStack {
+            if showingLanguageStep {
+                languageStepView
+                    .transition(.move(edge: .trailing))
+            } else {
+                WelcomeView {
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        showingLanguageStep = true
+                    }
+                }
+                .transition(.move(edge: .leading))
+            }
+        }
+        .clipped()
+    }
+
+    private var languageStepView: some View {
         VStack(spacing: 0) {
             // Header
             VStack(spacing: 8) {
-                Image(systemName: "waveform.circle.fill")
-                    .font(.system(size: 56))
+                Image(systemName: "globe")
+                    .font(.system(size: 48))
                     .foregroundStyle(.blue)
                     .padding(.top, 32)
+                    .accessibilityHidden(true)
 
-                Text("Welcome to WhisperNotes")
+                Text("Choose Your Language")
                     .font(.title.bold())
 
-                Text("Choose your primary transcription language.\nYou can change this later in Settings.")
+                Text("Select your primary transcription language.\nYou can change this later in Settings.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -95,6 +114,7 @@ public struct LanguageSetupView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            .keyboardShortcut(.defaultAction)
             .padding(.horizontal, 32)
             .padding(.bottom, 24)
         }
