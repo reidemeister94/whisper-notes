@@ -4,18 +4,25 @@ import SwiftUI
 @MainActor
 public final class AppState: ObservableObject {
     // Data
-    @Published var transcriptions: [Transcription] = []
-    @Published var folders: [Folder] = []
-    @Published var tags: [Tag] = []
+    @Published public var transcriptions: [Transcription] = []
+    @Published public var folders: [Folder] = []
+    @Published public var tags: [Tag] = []
 
     // Navigation
-    @Published var sidebarSelection: SidebarSelection? = .all
-    @Published var selectedTranscription: Transcription?
-    @Published var searchText = ""
+    @Published public var sidebarSelection: SidebarSelection? = .all
+    @Published public var selectedTranscription: Transcription?
+    @Published public var searchText = ""
 
     // Recording
     @Published public var showRecording = false
     @Published var isTranscribing = false
+
+    // Delete confirmation (setting non-nil triggers the alert)
+    @Published var transcriptionToDelete: Transcription?
+    @Published var folderToDelete: Folder?
+
+    /// Search focus trigger (increment to focus; avoids reset race condition)
+    @Published public var searchFocusTrigger = 0
 
     // Settings
     @Published var whisperPath: String
@@ -90,7 +97,7 @@ public final class AppState: ObservableObject {
             list = list.filter { $0.createdAt >= cutoff }
         case let .folder(id):
             // Special UUID = "Uncategorized" (no folder)
-            if id == UUID(uuidString: "00000000-0000-0000-0000-000000000000") {
+            if id == SidebarSelection.uncategorizedFolderID {
                 list = list.filter { $0.folderId == nil }
             } else {
                 list = list.filter { $0.folderId == id }
@@ -243,6 +250,65 @@ public final class AppState: ObservableObject {
             isTranscribing = false
             showRecording = false
         }
+    }
+
+    // MARK: - Delete confirmation
+
+    func confirmDeleteTranscription(_ t: Transcription) {
+        transcriptionToDelete = t
+    }
+
+    func executeDeleteTranscription() {
+        guard let t = transcriptionToDelete else { return }
+        deleteTranscription(t)
+        transcriptionToDelete = nil
+    }
+
+    func confirmDeleteFolder(_ folder: Folder) {
+        folderToDelete = folder
+    }
+
+    func executeDeleteFolder() {
+        guard let folder = folderToDelete else { return }
+        deleteFolder(folder)
+        folderToDelete = nil
+    }
+
+    public func deleteSelectedItem() {
+        // Priority: selected transcription takes precedence over selected folder
+        if let transcription = selectedTranscription {
+            confirmDeleteTranscription(transcription)
+            return
+        }
+        if case let .folder(folderId) = sidebarSelection,
+           folderId != SidebarSelection.uncategorizedFolderID,
+           let folder = folders.first(where: { $0.id == folderId })
+        {
+            confirmDeleteFolder(folder)
+        }
+    }
+
+    // MARK: - Keyboard shortcut helpers
+
+    func moveTranscriptionToFolder(_ transcription: Transcription, folderId: UUID?) {
+        var updated = transcription
+        updated.folderId = folderId
+        updateTranscription(updated)
+    }
+
+    func handleDrop(uuidStrings: [String], targetFolderId: UUID?) -> Bool {
+        for uuidString in uuidStrings {
+            guard let uuid = UUID(uuidString: uuidString),
+                  let transcription = transcriptions.first(where: { $0.id == uuid })
+            else { continue }
+            moveTranscriptionToFolder(transcription, folderId: targetFolderId)
+        }
+        return !uuidStrings.isEmpty
+    }
+
+    public func toggleFavoriteSelected() {
+        guard let transcription = selectedTranscription else { return }
+        toggleFavorite(transcription)
     }
 
     // MARK: - Helpers

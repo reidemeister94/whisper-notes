@@ -62,6 +62,27 @@ make help            # Show all targets
 - **Language** — Default "auto" (auto-detect). Selectable at first launch, in Settings, and per-recording. 30 languages supported via `SupportedLanguage` model. Persisted in UserDefaults.
 - **Testability** — Library/executable split enables `@testable import WhisperNotesLib`. Database accepts `init(path:)` for temp DBs. AppState accepts `init(db:mdSync:)` for dependency injection.
 
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| Cmd+N | New Recording |
+| Cmd+Shift+N | New Folder |
+| Cmd+S | Save transcription edits |
+| Cmd+Delete | Delete selected item (with confirmation) |
+| Cmd+F | Focus search field |
+| Cmd+D | Toggle favorite on selected transcription |
+
+Shortcuts are defined as `CommandGroup` in `WhisperNotesApp.swift`. Actions that modify `@FocusState` use a counter trigger pattern (`searchFocusTrigger += 1`) to avoid race conditions.
+
+## Drag-and-Drop
+
+- `Transcription` conforms to `Transferable` via `ProxyRepresentation(exporting: \.id.uuidString)`
+- Transcription rows in `TranscriptionListView` use `.draggable(transcription)`
+- Folder rows and "Uncategorized" in `SidebarView` use `.dropDestination(for: String.self)`
+- Drop handling centralized in `AppState.handleDrop(uuidStrings:targetFolderId:)`
+- The "Uncategorized" sentinel UUID is `SidebarSelection.uncategorizedFolderID` — use this constant, never the raw UUID string
+
 ## Data Locations
 
 - DB: `~/Library/Application Support/WhisperNotes/whisper-notes.db`
@@ -77,4 +98,3 @@ make help            # Show all targets
 ## Development Skills
 
 CRITICAL: USE ALWAYS THE PLUGIN "development-skills" FOR EVERY TASK ON THIS PROJECT (BRAINSTORMING, DEVELOPMENT, BUG FIXING, NEW FEATURE, ...) IF THE PLUGIN IS NOT AVAILABLE ON THE USER SYSTEM, NOTICE IT
-A skill swift-dev is also available in this project following the same patterns as the other skills inside development-skills plugin, use it.

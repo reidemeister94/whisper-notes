@@ -44,7 +44,10 @@ struct SidebarView: View {
                     iconColor: .gray,
                     count: state.transcriptions.filter { $0.folderId == nil }.count
                 )
-                .tag(SidebarSelection.folder(UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+                .tag(SidebarSelection.folder(SidebarSelection.uncategorizedFolderID))
+                .dropDestination(for: String.self) { items, _ in
+                    state.handleDrop(uuidStrings: items, targetFolderId: nil)
+                }
             }
 
             // Folders
@@ -67,6 +70,9 @@ struct SidebarView: View {
                             count: folder.transcriptionCount
                         )
                         .tag(SidebarSelection.folder(folder.id))
+                        .dropDestination(for: String.self) { items, _ in
+                            state.handleDrop(uuidStrings: items, targetFolderId: folder.id)
+                        }
                         .contextMenu {
                             Button("Rename") {
                                 renameText = folder.name
@@ -74,7 +80,7 @@ struct SidebarView: View {
                             }
                             Divider()
                             Button("Delete", role: .destructive) {
-                                state.deleteFolder(folder)
+                                state.confirmDeleteFolder(folder)
                             }
                         }
                     }

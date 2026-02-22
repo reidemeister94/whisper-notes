@@ -1,19 +1,37 @@
 import Foundation
+import SwiftUI
 
-struct Transcription: Identifiable, Hashable {
-    let id: UUID
-    var title: String
-    var content: String
-    var folderId: UUID?
-    var isFavorite: Bool
-    var duration: TimeInterval
-    var audioFilename: String?
-    var createdAt: Date
-    var updatedAt: Date
-    var tags: [Tag]
+public struct Transcription: Identifiable, Hashable {
+    public let id: UUID
+    public var title: String
+    public var content: String
+    public var folderId: UUID?
+    public var isFavorite: Bool
+    public var duration: TimeInterval
+    public var audioFilename: String?
+    public var createdAt: Date
+    public var updatedAt: Date
+    public var tags: [Tag]
+
+    public init(
+        id: UUID, title: String, content: String, folderId: UUID?,
+        isFavorite: Bool, duration: TimeInterval, audioFilename: String?,
+        createdAt: Date, updatedAt: Date, tags: [Tag]
+    ) {
+        self.id = id
+        self.title = title
+        self.content = content
+        self.folderId = folderId
+        self.isFavorite = isFavorite
+        self.duration = duration
+        self.audioFilename = audioFilename
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.tags = tags
+    }
 
     /// Include updatedAt so SwiftUI detects content changes and re-renders
-    static func == (lhs: Transcription, rhs: Transcription) -> Bool {
+    public static func == (lhs: Transcription, rhs: Transcription) -> Bool {
         lhs.id == rhs.id
             && lhs.title == rhs.title
             && lhs.isFavorite == rhs.isFavorite
@@ -22,36 +40,59 @@ struct Transcription: Identifiable, Hashable {
             && lhs.tags == rhs.tags
     }
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
 
-struct Folder: Identifiable, Hashable {
-    let id: UUID
-    var name: String
-    var sortOrder: Int
-    var createdAt: Date
-    var transcriptionCount = 0
+public struct Folder: Identifiable, Hashable {
+    public let id: UUID
+    public var name: String
+    public var sortOrder: Int
+    public var createdAt: Date
+    public var transcriptionCount = 0
+
+    public init(id: UUID, name: String, sortOrder: Int, createdAt: Date, transcriptionCount: Int = 0) {
+        self.id = id
+        self.name = name
+        self.sortOrder = sortOrder
+        self.createdAt = createdAt
+        self.transcriptionCount = transcriptionCount
+    }
 }
 
-struct Tag: Identifiable, Hashable {
-    let id: UUID
-    var name: String
-    var color: String
+public struct Tag: Identifiable, Hashable {
+    public let id: UUID
+    public var name: String
+    public var color: String
 
-    static let presetColors: [String] = [
+    public init(id: UUID, name: String, color: String) {
+        self.id = id
+        self.name = name
+        self.color = color
+    }
+
+    public static let presetColors: [String] = [
         "#FF453A", "#FF9F0A", "#FFD60A", "#30D158",
         "#0A84FF", "#5E5CE6", "#BF5AF2", "#8E8E93",
     ]
 }
 
-enum SidebarSelection: Hashable {
+extension Transcription: Transferable {
+    public static var transferRepresentation: some TransferRepresentation {
+        ProxyRepresentation(exporting: \.id.uuidString)
+    }
+}
+
+public enum SidebarSelection: Hashable {
     case all
     case favorites
     case recent
     case folder(UUID)
     case tag(UUID)
+
+    // swiftlint:disable:next force_unwrapping
+    public static let uncategorizedFolderID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
 }
 
 struct SupportedLanguage: Identifiable, Hashable {

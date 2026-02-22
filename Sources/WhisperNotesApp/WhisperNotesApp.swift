@@ -5,6 +5,21 @@ import WhisperNotesLib
 struct WhisperNotesApp: App {
     @StateObject private var appState = AppState()
 
+    private var isFolderSelected: Bool {
+        if case let .folder(id) = appState.sidebarSelection,
+           id != SidebarSelection.uncategorizedFolderID
+        {
+            return appState.folders.contains { $0.id == id }
+        }
+        return false
+    }
+
+    private var favoriteMenuLabel: String {
+        appState.selectedTranscription?.isFavorite == true
+            ? "Remove from Favorites"
+            : "Add to Favorites"
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -32,6 +47,29 @@ struct WhisperNotesApp: App {
                     appState.createFolder(name: "New Folder")
                 }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+            }
+
+            CommandGroup(after: .pasteboard) {
+                Button("Delete") {
+                    appState.deleteSelectedItem()
+                }
+                .keyboardShortcut(.delete, modifiers: .command)
+                .disabled(appState.selectedTranscription == nil && !isFolderSelected)
+            }
+
+            CommandGroup(before: .textEditing) {
+                Button("Find") {
+                    appState.searchFocusTrigger += 1
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
+
+            CommandGroup(after: .toolbar) {
+                Button(favoriteMenuLabel) {
+                    appState.toggleFavoriteSelected()
+                }
+                .keyboardShortcut("d", modifiers: .command)
+                .disabled(appState.selectedTranscription == nil)
             }
         }
 

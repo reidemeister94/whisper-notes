@@ -114,8 +114,7 @@ final class AppStateTests: XCTestCase {
         let folderId = try XCTUnwrap(appState.folders.first?.id)
         appState.createTranscription(title: "InFolder", content: "", folderId: folderId, duration: 0, audioFilename: nil)
         appState.createTranscription(title: "NoFolder", content: "", folderId: nil, duration: 0, audioFilename: nil)
-        let uncategorizedId = try XCTUnwrap(UUID(uuidString: "00000000-0000-0000-0000-000000000000"))
-        appState.sidebarSelection = .folder(uncategorizedId)
+        appState.sidebarSelection = .folder(SidebarSelection.uncategorizedFolderID)
         XCTAssertEqual(appState.filteredTranscriptions.count, 1)
         XCTAssertEqual(appState.filteredTranscriptions[0].title, "NoFolder")
     }

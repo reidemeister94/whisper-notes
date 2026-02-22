@@ -68,16 +68,12 @@ struct TranscriptionDetailView: View {
 
                         Menu("Move to Folder") {
                             Button("No Folder") {
-                                var t = transcription
-                                t.folderId = nil
-                                state.updateTranscription(t)
+                                state.moveTranscriptionToFolder(transcription, folderId: nil)
                             }
                             Divider()
                             ForEach(state.folders) { folder in
                                 Button(folder.name) {
-                                    var t = transcription
-                                    t.folderId = folder.id
-                                    state.updateTranscription(t)
+                                    state.moveTranscriptionToFolder(transcription, folderId: folder.id)
                                 }
                             }
                         }
@@ -89,7 +85,7 @@ struct TranscriptionDetailView: View {
                         Divider()
 
                         Button("Delete", role: .destructive) {
-                            state.deleteTranscription(transcription)
+                            state.confirmDeleteTranscription(transcription)
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TranscriptionListView: View {
     @EnvironmentObject var state: AppState
+    @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -14,6 +15,7 @@ struct TranscriptionListView: View {
                     TextField("Search...", text: $state.searchText)
                         .textFieldStyle(.plain)
                         .font(.body)
+                        .focused($isSearchFieldFocused)
                     if !state.searchText.isEmpty {
                         Button {
                             state.searchText = ""
@@ -55,6 +57,7 @@ struct TranscriptionListView: View {
                 List(state.filteredTranscriptions, selection: $state.selectedTranscription) { transcription in
                     TranscriptionRow(transcription: transcription)
                         .tag(transcription)
+                        .draggable(transcription)
                         .contextMenu {
                             Button(transcription.isFavorite ? "Remove from Favorites" : "Add to Favorites") {
                                 state.toggleFavorite(transcription)
@@ -63,16 +66,12 @@ struct TranscriptionListView: View {
                             if !state.folders.isEmpty {
                                 Menu("Move to Folder") {
                                     Button("No Folder") {
-                                        var t = transcription
-                                        t.folderId = nil
-                                        state.updateTranscription(t)
+                                        state.moveTranscriptionToFolder(transcription, folderId: nil)
                                     }
                                     Divider()
                                     ForEach(state.folders) { folder in
                                         Button(folder.name) {
-                                            var t = transcription
-                                            t.folderId = folder.id
-                                            state.updateTranscription(t)
+                                            state.moveTranscriptionToFolder(transcription, folderId: folder.id)
                                         }
                                     }
                                 }
@@ -81,12 +80,15 @@ struct TranscriptionListView: View {
                             Divider()
 
                             Button("Delete", role: .destructive) {
-                                state.deleteTranscription(transcription)
+                                state.confirmDeleteTranscription(transcription)
                             }
                         }
                 }
                 .listStyle(.plain)
             }
+        }
+        .onChange(of: state.searchFocusTrigger) { _, _ in
+            isSearchFieldFocused = true
         }
     }
 

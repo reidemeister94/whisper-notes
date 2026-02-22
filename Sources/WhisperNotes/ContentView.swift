@@ -22,6 +22,40 @@ public struct ContentView: View {
         .sheet(isPresented: $state.showRecording) {
             RecordingView()
         }
+        .alert(
+            "Delete Transcription",
+            isPresented: Binding(
+                get: { state.transcriptionToDelete != nil },
+                set: { if !$0 { state.transcriptionToDelete = nil } }
+            ),
+            presenting: state.transcriptionToDelete
+        ) { _ in
+            Button("Delete", role: .destructive) {
+                state.executeDeleteTranscription()
+            }
+            Button("Cancel", role: .cancel) {
+                state.transcriptionToDelete = nil
+            }
+        } message: { transcription in
+            Text("Delete \"\(transcription.title)\"? This cannot be undone.")
+        }
+        .alert(
+            "Delete Folder",
+            isPresented: Binding(
+                get: { state.folderToDelete != nil },
+                set: { if !$0 { state.folderToDelete = nil } }
+            ),
+            presenting: state.folderToDelete
+        ) { _ in
+            Button("Delete", role: .destructive) {
+                state.executeDeleteFolder()
+            }
+            Button("Cancel", role: .cancel) {
+                state.folderToDelete = nil
+            }
+        } message: { folder in
+            Text("Delete folder \"\(folder.name)\"? Transcriptions will be moved to Uncategorized.")
+        }
     }
 }
 
