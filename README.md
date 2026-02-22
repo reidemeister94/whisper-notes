@@ -1,6 +1,6 @@
 # WhisperNotes
 
-A native macOS app for recording audio and transcribing it to text using [whisper.cpp](https://github.com/ggerganov/whisper.cpp). Organize your transcriptions into folders, tag them, search across everything, and export to Markdown — fully compatible with [Obsidian](https://obsidian.md).
+A native macOS app for recording audio and transcribing it to text using [whisper.cpp](https://github.com/ggerganov/whisper.cpp). Organize your transcriptions into folders, tag them, search across everything, and export to Markdown
 
 > Built with Swift and SwiftUI. No Electron, no web views — just a fast, native Mac experience.
 
@@ -103,7 +103,7 @@ Sources/WhisperNotes/
 - **Centralized state** — single `AppState` ObservableObject manages all app data
 - **SQLite with WAL** — fast concurrent reads, reliable persistence
 - **Batch tag queries** — avoids N+1 query problem when loading transcriptions
-- **Markdown sync** — every save writes a `.md` file with YAML frontmatter for Obsidian interop
+- **Markdown sync** — every save writes a `.md` file with YAML frontmatter
 
 ## Data Storage
 

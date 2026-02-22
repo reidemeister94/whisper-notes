@@ -36,20 +36,20 @@ struct RecordingView: View {
             .padding(.bottom, 12)
 
             // Form
-            VStack(spacing: 16) {
+            VStack(spacing: 20) {
                 // Title
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Title")
-                        .font(.caption)
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
                     TextField("Enter a title...", text: $title)
                         .textFieldStyle(.roundedBorder)
                 }
 
                 // Folder
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Folder")
-                        .font(.caption)
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
 
                     if isCreatingFolder {
@@ -90,9 +90,9 @@ struct RecordingView: View {
                     }
                 }
                 // Language override
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Language")
-                        .font(.caption)
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
 
                     Picker("Language", selection: Binding(
@@ -234,13 +234,13 @@ struct RecordingBar: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 2)
             .fill(.red)
-            .frame(width: 3, height: height)
+            .frame(width: 4, height: height)
             .onAppear {
                 withAnimation(
                     .easeInOut(duration: 0.4 + Double(index) * 0.1)
                         .repeatForever(autoreverses: true)
                 ) {
-                    height = CGFloat.random(in: 8 ... 24)
+                    height = CGFloat.random(in: 8 ... 32)
                 }
             }
     }

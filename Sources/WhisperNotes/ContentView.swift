@@ -29,16 +29,21 @@ struct EmptyDetailView: View {
     @EnvironmentObject var state: AppState
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Image(systemName: "waveform.circle")
-                .font(.system(size: 64))
+                .font(.system(size: 80))
                 .foregroundStyle(.quaternary)
-            Text("Select a transcription")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-            Text("Or start a new recording")
-                .font(.callout)
-                .foregroundStyle(.tertiary)
+
+            VStack(spacing: 8) {
+                Text("Select a transcription")
+                    .font(.title2.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Text("Or start a new recording to transcribe audio with Whisper")
+                    .font(.body)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 300)
+            }
 
             Button {
                 state.showRecording = true
@@ -48,7 +53,7 @@ struct EmptyDetailView: View {
             .buttonStyle(.borderedProminent)
             .tint(.red)
             .controlSize(.large)
-            .padding(.top, 8)
+            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

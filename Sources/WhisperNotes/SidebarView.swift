@@ -11,180 +11,183 @@ struct SidebarView: View {
     @State private var renameText = ""
 
     var body: some View {
-        VStack(spacing: 0) {
-            List(selection: $state.sidebarSelection) {
-                // Favorites (smart folders)
-                Section("Favorites") {
-                    sidebarRow(
-                        "All Transcriptions",
-                        icon: "tray.full",
-                        iconColor: .blue,
-                        count: state.transcriptions.count
-                    )
-                    .tag(SidebarSelection.all)
+        List(selection: $state.sidebarSelection) {
+            // Favorites (smart folders)
+            Section("Favorites") {
+                sidebarRow(
+                    "All Transcriptions",
+                    icon: "tray.full",
+                    iconColor: .blue,
+                    count: state.transcriptions.count
+                )
+                .tag(SidebarSelection.all)
 
-                    sidebarRow(
-                        "Favorites",
-                        icon: "star.fill",
-                        iconColor: .yellow,
-                        count: state.transcriptions.filter(\.isFavorite).count
-                    )
-                    .tag(SidebarSelection.favorites)
+                sidebarRow(
+                    "Favorites",
+                    icon: "star.fill",
+                    iconColor: .yellow,
+                    count: state.transcriptions.filter(\.isFavorite).count
+                )
+                .tag(SidebarSelection.favorites)
 
-                    sidebarRow(
-                        "Recent",
-                        icon: "clock",
-                        iconColor: .green,
-                        count: recentCount
-                    )
-                    .tag(SidebarSelection.recent)
+                sidebarRow(
+                    "Recent",
+                    icon: "clock",
+                    iconColor: .green,
+                    count: recentCount
+                )
+                .tag(SidebarSelection.recent)
 
-                    sidebarRow(
-                        "Uncategorized",
-                        icon: "archivebox",
-                        iconColor: .gray,
-                        count: state.transcriptions.filter { $0.folderId == nil }.count
-                    )
-                    .tag(SidebarSelection.folder(UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
-                }
+                sidebarRow(
+                    "Uncategorized",
+                    icon: "archivebox",
+                    iconColor: .gray,
+                    count: state.transcriptions.filter { $0.folderId == nil }.count
+                )
+                .tag(SidebarSelection.folder(UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+            }
 
-                // Folders
-                Section {
-                    ForEach(state.folders) { folder in
-                        if renamingFolder?.id == folder.id {
-                            TextField("Folder name", text: $renameText)
-                                .textFieldStyle(.roundedBorder)
-                                .onSubmit {
-                                    if !renameText.isEmpty {
-                                        state.renameFolder(folder, to: renameText)
-                                    }
-                                    renamingFolder = nil
-                                }
-                        } else {
-                            sidebarRow(
-                                folder.name,
-                                icon: "folder.fill",
-                                iconColor: .blue,
-                                count: folder.transcriptionCount
-                            )
-                            .tag(SidebarSelection.folder(folder.id))
-                            .contextMenu {
-                                Button("Rename") {
-                                    renameText = folder.name
-                                    renamingFolder = folder
-                                }
-                                Divider()
-                                Button("Delete", role: .destructive) {
-                                    state.deleteFolder(folder)
-                                }
-                            }
-                        }
-                    }
-
-                    if isAddingFolder {
-                        TextField("Folder name", text: $newFolderName)
+            // Folders
+            Section {
+                ForEach(state.folders) { folder in
+                    if renamingFolder?.id == folder.id {
+                        TextField("Folder name", text: $renameText)
                             .textFieldStyle(.roundedBorder)
                             .onSubmit {
-                                if !newFolderName.isEmpty {
-                                    state.createFolder(name: newFolderName)
+                                if !renameText.isEmpty {
+                                    state.renameFolder(folder, to: renameText)
                                 }
-                                newFolderName = ""
-                                isAddingFolder = false
+                                renamingFolder = nil
                             }
-                    }
-                } header: {
-                    Text("Folders")
-                }
-
-                // Tags
-                Section {
-                    ForEach(state.tags) { tag in
-                        HStack(spacing: 8) {
-                            Image(systemName: "tag")
-                                .font(.caption)
-                                .foregroundStyle(Color(hex: tag.color))
-                            Text(tag.name)
-                            Spacer()
-                            Text("\(tagCount(tag.id))")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
-                        .tag(SidebarSelection.tag(tag.id))
+                    } else {
+                        sidebarRow(
+                            folder.name,
+                            icon: "folder.fill",
+                            iconColor: .blue,
+                            count: folder.transcriptionCount
+                        )
+                        .tag(SidebarSelection.folder(folder.id))
                         .contextMenu {
+                            Button("Rename") {
+                                renameText = folder.name
+                                renamingFolder = folder
+                            }
+                            Divider()
                             Button("Delete", role: .destructive) {
-                                state.deleteTag(tag)
+                                state.deleteFolder(folder)
                             }
                         }
                     }
-
-                    if isAddingTag {
-                        HStack(spacing: 6) {
-                            TextField("Tag name", text: $newTagName)
-                                .textFieldStyle(.roundedBorder)
-                                .onSubmit {
-                                    if !newTagName.isEmpty {
-                                        state.createTag(name: newTagName, color: newTagColor)
-                                    }
-                                    newTagName = ""
-                                    isAddingTag = false
-                                }
-
-                            Menu {
-                                ForEach(Tag.presetColors, id: \.self) { color in
-                                    Button {
-                                        newTagColor = color
-                                    } label: {
-                                        Label(
-                                            color == newTagColor ? "Selected" : "",
-                                            systemImage: color == newTagColor ? "checkmark.circle.fill" : "circle.fill"
-                                        )
-                                    }
-                                    .tint(Color(hex: color))
-                                }
-                            } label: {
-                                Circle()
-                                    .fill(Color(hex: newTagColor))
-                                    .frame(width: 14, height: 14)
-                            }
-                            .menuStyle(.borderlessButton)
-                            .frame(width: 24)
-                        }
-                    }
-                } header: {
-                    Text("Tags")
                 }
-            }
-            .listStyle(.sidebar)
 
-            Divider()
-
-            // Bottom toolbar
-            HStack(spacing: 12) {
-                Menu {
+                if isAddingFolder {
+                    TextField("Folder name", text: $newFolderName)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit {
+                            if !newFolderName.isEmpty {
+                                state.createFolder(name: newFolderName)
+                            }
+                            newFolderName = ""
+                            isAddingFolder = false
+                        }
+                }
+            } header: {
+                HStack {
+                    Text("Folders")
+                    Spacer()
                     Button {
                         isAddingFolder = true
                     } label: {
-                        Label("New Folder", systemImage: "folder.badge.plus")
+                        Image(systemName: "plus")
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // Tags
+            Section {
+                ForEach(state.tags) { tag in
+                    Label {
+                        HStack {
+                            Text(tag.name)
+                            Spacer()
+                            Text("\(tagCount(tag.id))")
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 1)
+                                .background(.secondary.opacity(0.15))
+                                .clipShape(Capsule())
+                        }
+                    } icon: {
+                        Image(systemName: "tag.fill")
+                            .foregroundStyle(Color(hex: tag.color))
+                    }
+                    .tag(SidebarSelection.tag(tag.id))
+                    .contextMenu {
+                        Button("Delete", role: .destructive) {
+                            state.deleteTag(tag)
+                        }
+                    }
+                }
+
+                if isAddingTag {
+                    HStack(spacing: 6) {
+                        TextField("Tag name", text: $newTagName)
+                            .textFieldStyle(.roundedBorder)
+                            .onSubmit {
+                                if !newTagName.isEmpty {
+                                    state.createTag(name: newTagName, color: newTagColor)
+                                }
+                                newTagName = ""
+                                isAddingTag = false
+                            }
+
+                        Menu {
+                            ForEach(Tag.presetColors, id: \.self) { color in
+                                Button {
+                                    newTagColor = color
+                                } label: {
+                                    Label(
+                                        color == newTagColor ? "Selected" : "",
+                                        systemImage: color == newTagColor ? "checkmark.circle.fill" : "circle.fill"
+                                    )
+                                }
+                                .tint(Color(hex: color))
+                            }
+                        } label: {
+                            Circle()
+                                .fill(Color(hex: newTagColor))
+                                .frame(width: 14, height: 14)
+                        }
+                        .menuStyle(.borderlessButton)
+                        .frame(width: 24)
+                    }
+                }
+            } header: {
+                HStack {
+                    Text("Tags")
+                    Spacer()
                     Button {
                         newTagColor = Tag.presetColors.randomElement() ?? Tag.presetColors[4]
                         isAddingTag = true
                     } label: {
-                        Label("New Tag", systemImage: "tag")
+                        Image(systemName: "plus")
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
                     }
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.callout)
+                    .buttonStyle(.plain)
                 }
-                .menuStyle(.borderlessButton)
-                .frame(width: 20)
-
-                Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
         }
+        .listStyle(.sidebar)
     }
 
     private func sidebarRow(_ title: String, icon: String, iconColor: Color, count: Int) -> some View {
@@ -193,9 +196,13 @@ struct SidebarView: View {
                 Text(title)
                 Spacer()
                 Text("\(count)")
-                    .font(.caption)
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 1)
+                    .background(.secondary.opacity(0.15))
+                    .clipShape(Capsule())
             }
         } icon: {
             Image(systemName: icon)

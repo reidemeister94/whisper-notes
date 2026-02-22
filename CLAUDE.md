@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Native macOS app (Swift/SwiftUI) for audio recording and transcription via whisper.cpp. SQLite storage with Markdown filesystem sync for Obsidian compatibility.
+Native macOS app (Swift/SwiftUI) for audio recording and transcription via whisper.cpp. SQLite storage with Markdown filesystem sync.
 
 ## Build Commands
 
@@ -56,7 +56,7 @@ make help            # Show all targets
 - **No external dependencies** — only system frameworks (SwiftUI, AVFoundation, SQLite3)
 - **State pattern** — single `AppState` ObservableObject, views use `@EnvironmentObject`
 - **Database** — raw SQLite3 C API, no ORM. WAL journal mode. Foreign keys enabled
-- **Markdown sync** — every transcription save also writes a `.md` file for Obsidian
+- **Markdown sync** — every transcription save also writes a `.md` file
 - **UI** — 3-column NavigationSplitView (sidebar | list | detail)
 - **Process execution** — whisper-cli runs via Foundation `Process` with timeout
 - **Language** — Default "auto" (auto-detect). Selectable at first launch, in Settings, and per-recording. 30 languages supported via `SupportedLanguage` model. Persisted in UserDefaults.

@@ -28,8 +28,8 @@ struct TranscriptionDetailView: View {
 
                 Spacer(minLength: 16)
 
-                // Toolbar icons (SnippetsLab style)
-                HStack(spacing: 2) {
+                // Toolbar icons
+                HStack(spacing: 4) {
                     // Favorite
                     ToolbarIconButton(
                         icon: transcription.isFavorite ? "star.fill" : "star",
@@ -93,17 +93,17 @@ struct TranscriptionDetailView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
-                            .font(.callout)
+                            .font(.body)
                             .foregroundStyle(.secondary)
-                            .frame(width: 28, height: 28)
+                            .frame(width: 32, height: 32)
                             .contentShape(Rectangle())
                     }
                     .menuStyle(.borderlessButton)
-                    .frame(width: 28)
+                    .frame(width: 32)
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.vertical, 14)
             .background(.bar)
 
             Divider()
@@ -117,11 +117,11 @@ struct TranscriptionDetailView: View {
                 }
 
                 if !transcription.tags.isEmpty {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 5) {
                         ForEach(transcription.tags) { tag in
                             Text(tag.name)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 1)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
                                 .background(Color(hex: tag.color).opacity(0.15))
                                 .foregroundStyle(Color(hex: tag.color))
                                 .clipShape(Capsule())
@@ -134,7 +134,7 @@ struct TranscriptionDetailView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .padding(.horizontal, 20)
-            .padding(.vertical, 8)
+            .padding(.vertical, 10)
             .background(.bar.opacity(0.5))
 
             Divider()
@@ -143,8 +143,8 @@ struct TranscriptionDetailView: View {
             TextEditor(text: $editContent)
                 .font(.body)
                 .scrollContentBackground(.hidden)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
                 .focused($isContentFocused)
 
             Divider()
@@ -152,7 +152,7 @@ struct TranscriptionDetailView: View {
             // Bottom status bar
             HStack {
                 Text("\(wordCount) words")
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.tertiary)
 
                 Spacer()
@@ -160,12 +160,12 @@ struct TranscriptionDetailView: View {
                 if hasUnsavedChanges {
                     Button("Save") { save() }
                         .buttonStyle(.borderedProminent)
-                        .controlSize(.mini)
+                        .controlSize(.small)
                         .keyboardShortcut("s", modifiers: .command)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
             .background(.bar)
         }
         .onAppear {
@@ -250,9 +250,9 @@ struct ToolbarIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.callout)
+                .font(.body)
                 .foregroundStyle(color ?? .secondary)
-                .frame(width: 28, height: 28)
+                .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -70,7 +70,7 @@ public struct SettingsView: View {
                         }
                     }
                 }
-                Text("Markdown files are saved here, compatible with Obsidian")
+                Text("Markdown files are saved here")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
