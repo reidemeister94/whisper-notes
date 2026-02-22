@@ -6,11 +6,21 @@ final class Database {
     let path: String
 
     init() {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            fatalError("Application Support directory unavailable")
+        }
         let dir = support.appendingPathComponent("WhisperNotes", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         self.path = dir.appendingPathComponent("whisper-notes.db").path
+        openAndConfigure()
+    }
 
+    init(path: String) {
+        self.path = path
+        openAndConfigure()
+    }
+
+    private func openAndConfigure() {
         guard sqlite3_open(path, &db) == SQLITE_OK else {
             fatalError("Cannot open database at \(path)")
         }

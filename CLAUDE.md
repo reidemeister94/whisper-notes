@@ -9,12 +9,15 @@ Native macOS app (Swift/SwiftUI) for audio recording and transcription via whisp
 ```bash
 swift build              # Debug build
 swift build -c release   # Release build
+swift test               # Run all 95 tests
 ./build.sh               # Build .app bundle (release + codesign)
 ```
 
 ## Project Structure
 
-- `Sources/WhisperNotes/` — all application source code
+- `Sources/WhisperNotes/` — library target (WhisperNotesLib) — all application source code
+- `Sources/WhisperNotesApp/` — executable target — thin `@main` wrapper
+- `Tests/WhisperNotesTests/` — test target (95 tests across 7 files)
 - `Resources/` — Info.plist, AppIcon.icns
 - `Package.swift` — SPM manifest (Swift 5.9, macOS 14+)
 - `build.sh` — creates signed .app bundle
@@ -27,9 +30,11 @@ swift build -c release   # Release build
 | `Database.swift` | SQLite3 layer — WAL mode, foreign keys, batch tag queries |
 | `WhisperService.swift` | Runs whisper-cli as subprocess, parses output |
 | `MarkdownSync.swift` | Writes/reads .md files with YAML frontmatter |
-| `Models.swift` | Data models: Transcription, Folder, Tag, SidebarSelection |
+| `Models.swift` | Data models: Transcription, Folder, Tag, SidebarSelection, SupportedLanguage |
 | `ContentView.swift` | Root 3-column NavigationSplitView |
-| `RecordingView.swift` | Recording modal with waveform animation |
+| `RecordingView.swift` | Recording modal with waveform animation + language override |
+| `SettingsView.swift` | App settings including language selection |
+| `LanguageSetupView.swift` | First-launch language selection onboarding |
 
 ## Architecture & Conventions
 
@@ -39,7 +44,8 @@ swift build -c release   # Release build
 - **Markdown sync** — every transcription save also writes a `.md` file for Obsidian
 - **UI** — 3-column NavigationSplitView (sidebar | list | detail)
 - **Process execution** — whisper-cli runs via Foundation `Process` with timeout
-- **Default language** — Italian (`"it"`) in WhisperService — configurable
+- **Language** — Default "auto" (auto-detect). Selectable at first launch, in Settings, and per-recording. 30 languages supported via `SupportedLanguage` model. Persisted in UserDefaults.
+- **Testability** — Library/executable split enables `@testable import WhisperNotesLib`. Database accepts `init(path:)` for temp DBs. AppState accepts `init(db:mdSync:)` for dependency injection.
 
 ## Data Locations
 

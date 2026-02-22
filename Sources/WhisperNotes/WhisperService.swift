@@ -3,7 +3,7 @@ import Foundation
 struct WhisperService {
     var whisperPath: String
     var modelPath: String
-    var language: String = "it"
+    var language: String = "auto"
     var timeoutSeconds: TimeInterval = 300
 
     static var defaultWhisperPath: String {

@@ -1,9 +1,11 @@
 import SwiftUI
 
-struct SettingsView: View {
+public struct SettingsView: View {
     @EnvironmentObject var state: AppState
 
-    var body: some View {
+    public init() {}
+
+    public var body: some View {
         Form {
             Section("Whisper") {
                 HStack {
@@ -41,6 +43,17 @@ struct SettingsView: View {
                 .font(.caption)
             }
 
+            Section("Language") {
+                Picker("Transcription language", selection: $state.language) {
+                    ForEach(SupportedLanguage.all) { lang in
+                        Text("\(lang.name) (\(lang.code))").tag(lang.code)
+                    }
+                }
+                Text("Language used for speech recognition. \"Auto-detect\" lets whisper.cpp determine the language automatically.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Storage") {
                 HStack {
                     TextField("Notes folder", text: $state.notesPath)
@@ -71,7 +84,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 500, height: 320)
+        .frame(width: 500, height: 400)
         .padding()
     }
 

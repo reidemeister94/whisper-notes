@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-final class AppState: ObservableObject {
+public final class AppState: ObservableObject {
     // Data
     @Published var transcriptions: [Transcription] = []
     @Published var folders: [Folder] = []
@@ -14,27 +14,43 @@ final class AppState: ObservableObject {
     @Published var searchText = ""
 
     // Recording
-    @Published var showRecording = false
+    @Published public var showRecording = false
     @Published var isTranscribing = false
 
     // Settings
     @Published var whisperPath: String
     @Published var modelPath: String
     @Published var notesPath: String
+    @Published public var language: String
+    @Published public var hasCompletedSetup: Bool
 
-    let db = Database()
+    let db: Database
     var mdSync: MarkdownSync
 
-    init() {
+    public init() {
         let defaults = UserDefaults.standard
         self.whisperPath = defaults.string(forKey: "whisperPath") ?? WhisperService.defaultWhisperPath
         self.modelPath = defaults.string(forKey: "modelPath") ?? WhisperService.defaultModelPath
+        self.language = defaults.string(forKey: "language") ?? "auto"
+        self.hasCompletedSetup = defaults.bool(forKey: "hasCompletedSetup")
 
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let notes = defaults.string(forKey: "notesPath") ?? "\(home)/Documents/Whisper Notes"
         self.notesPath = notes
+        self.db = Database()
         self.mdSync = MarkdownSync(baseURL: URL(fileURLWithPath: notes))
 
+        reload()
+    }
+
+    init(db: Database, mdSync: MarkdownSync, hasCompletedSetup: Bool = true) {
+        self.db = db
+        self.mdSync = mdSync
+        self.whisperPath = WhisperService.defaultWhisperPath
+        self.modelPath = WhisperService.defaultModelPath
+        self.notesPath = mdSync.baseURL.path
+        self.language = "auto"
+        self.hasCompletedSetup = hasCompletedSetup
         reload()
     }
 
@@ -49,7 +65,14 @@ final class AppState: ObservableObject {
         defaults.set(whisperPath, forKey: "whisperPath")
         defaults.set(modelPath, forKey: "modelPath")
         defaults.set(notesPath, forKey: "notesPath")
+        defaults.set(language, forKey: "language")
         mdSync = MarkdownSync(baseURL: URL(fileURLWithPath: notesPath))
+    }
+
+    public func completeSetup() {
+        UserDefaults.standard.set(true, forKey: "hasCompletedSetup")
+        hasCompletedSetup = true
+        saveSettings()
     }
 
     // MARK: - Filtered transcriptions
@@ -135,7 +158,7 @@ final class AppState: ObservableObject {
 
     // MARK: - Folder CRUD
 
-    func createFolder(name: String) {
+    public func createFolder(name: String) {
         let f = Folder(id: UUID(), name: name, sortOrder: folders.count, createdAt: Date())
         db.insertFolder(f)
         mdSync.createFolderDir(name)
@@ -188,12 +211,16 @@ final class AppState: ObservableObject {
 
     // MARK: - Recording + Transcription
 
-    func recordAndTranscribe(title: String, folderId: UUID?, audioURL: URL, duration: TimeInterval) {
+    func recordAndTranscribe(title: String, folderId: UUID?, audioURL: URL, duration: TimeInterval, languageOverride: String? = nil) {
         isTranscribing = true
-        let service = WhisperService(whisperPath: whisperPath, modelPath: modelPath)
+        var service = WhisperService(whisperPath: whisperPath, modelPath: modelPath)
+        service.language = languageOverride ?? language
 
-        let audioDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("WhisperNotes/Audio", isDirectory: true)
+        guard let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            isTranscribing = false
+            return
+        }
+        let audioDir = supportDir.appendingPathComponent("WhisperNotes/Audio", isDirectory: true)
         try? FileManager.default.createDirectory(at: audioDir, withIntermediateDirectories: true)
         let audioFilename = "\(UUID().uuidString).wav"
         let permanentURL = audioDir.appendingPathComponent(audioFilename)

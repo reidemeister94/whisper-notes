@@ -7,10 +7,12 @@ struct RecordingView: View {
     @State private var selectedFolderId: UUID?
     @State private var isCreatingFolder = false
     @State private var newFolderName = ""
+    @State private var languageOverride: String?
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
     private let newFolderSentinel = UUID(uuidString: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF")!
+    private let defaultLanguageSentinel = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -87,6 +89,27 @@ struct RecordingView: View {
                         }
                     }
                 }
+                // Language override
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Language")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Picker("Language", selection: Binding(
+                        get: { languageOverride ?? defaultLanguageSentinel },
+                        set: { newValue in
+                            languageOverride = newValue == defaultLanguageSentinel ? nil : newValue
+                        }
+                    )) {
+                        Text("Default (\(SupportedLanguage.named(state.language)?.name ?? state.language))")
+                            .tag(defaultLanguageSentinel)
+                        Divider()
+                        ForEach(SupportedLanguage.all) { lang in
+                            Text("\(lang.name) (\(lang.code))").tag(lang.code)
+                        }
+                    }
+                    .labelsHidden()
+                }
             }
             .padding(.horizontal, 24)
 
@@ -117,7 +140,7 @@ struct RecordingView: View {
                     .padding(.bottom, 8)
             }
         }
-        .frame(width: 420, height: 460)
+        .frame(width: 420, height: 520)
         .onAppear {
             let df = DateFormatter()
             df.dateFormat = "yyyy-MM-dd HH:mm"
@@ -196,7 +219,8 @@ struct RecordingView: View {
             title: finalTitle,
             folderId: selectedFolderId,
             audioURL: audioURL,
-            duration: recorder.elapsedTime
+            duration: recorder.elapsedTime,
+            languageOverride: languageOverride
         )
     }
 }
