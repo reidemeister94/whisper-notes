@@ -9,7 +9,7 @@ Native macOS app (Swift/SwiftUI) for audio recording and transcription via whisp
 ```bash
 swift build              # Debug build
 swift build -c release   # Release build
-swift test               # Run all 95 tests
+swift test               # Run all 96 tests
 ./build.sh               # Build .app bundle (release + codesign)
 ```
 
@@ -32,7 +32,7 @@ make help            # Show all targets
 
 - `Sources/WhisperNotes/` — library target (WhisperNotesLib) — all application source code
 - `Sources/WhisperNotesApp/` — executable target — thin `@main` wrapper
-- `Tests/WhisperNotesTests/` — test target (95 tests across 7 files)
+- `Tests/WhisperNotesTests/` — test target (96 tests across 7 files)
 - `Resources/` — Info.plist, AppIcon.icns
 - `Package.swift` — SPM manifest (Swift 5.9, macOS 14+)
 - `build.sh` — creates signed .app bundle
@@ -56,8 +56,8 @@ make help            # Show all targets
 - **No external dependencies** — only system frameworks (SwiftUI, AVFoundation, SQLite3)
 - **State pattern** — single `AppState` ObservableObject, views use `@EnvironmentObject`
 - **Database** — raw SQLite3 C API, no ORM. WAL journal mode. Foreign keys enabled
-- **Markdown sync** — every transcription save also writes a `.md` file
-- **UI** — 3-column NavigationSplitView (sidebar | list | detail)
+- **Markdown sync** — every transcription save also writes a `.md` file. One-way sync (app → filesystem); SQLite is the sole source of truth. Filesystem changes (deleting .md files in Finder) are NOT reflected back to the app.
+- **UI** — 3-column NavigationSplitView (sidebar | list | detail). Sidebar `Section` views use `isExpanded:` bindings for reliable rendering when data changes dynamically.
 - **Process execution** — whisper-cli runs via Foundation `Process` with timeout
 - **Language** — Default "auto" (auto-detect). Selectable at first launch, in Settings, and per-recording. 30 languages supported via `SupportedLanguage` model. Persisted in UserDefaults.
 - **Testability** — Library/executable split enables `@testable import WhisperNotesLib`. Database accepts `init(path:)` for temp DBs. AppState accepts `init(db:mdSync:)` for dependency injection.
@@ -74,6 +74,11 @@ make help            # Show all targets
 | Cmd+D | Toggle favorite on selected transcription |
 
 Shortcuts are defined as `CommandGroup` in `WhisperNotesApp.swift`. Actions that modify `@FocusState` use a counter trigger pattern (`searchFocusTrigger += 1`) to avoid race conditions.
+
+## SwiftUI Pitfalls
+
+- **TextField `.onSubmit`** only fires on Enter key press, NOT on focus loss. Always commit pending state (e.g. new folder name) before actions the user can trigger by clicking buttons (e.g. Start Recording).
+- **Sidebar `Section`** must use `isExpanded:` binding for reliable rendering when data changes dynamically (e.g. first folder creation transitioning from empty to non-empty).
 
 ## Drag-and-Drop
 

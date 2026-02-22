@@ -19,7 +19,9 @@ public struct ContentView: View {
                 EmptyDetailView()
             }
         }
-        .sheet(isPresented: $state.showRecording) {
+        .sheet(isPresented: $state.showRecording, onDismiss: {
+            state.reload()
+        }) {
             RecordingView()
         }
         .alert(

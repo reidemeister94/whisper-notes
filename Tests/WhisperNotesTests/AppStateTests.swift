@@ -157,6 +157,12 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(appState.folders[0].name, "Work")
     }
 
+    func testCreateFolderReturnsFolder() {
+        let folder = appState.createFolder(name: "Projects")
+        XCTAssertEqual(folder.name, "Projects")
+        XCTAssertEqual(appState.folders.first(where: { $0.id == folder.id })?.name, "Projects")
+    }
+
     func testRenameFolder() {
         appState.createFolder(name: "Old")
         let folder = appState.folders[0]

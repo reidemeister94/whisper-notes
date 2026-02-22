@@ -9,6 +9,8 @@ struct SidebarView: View {
     @State private var isAddingTag = false
     @State private var renamingFolder: Folder?
     @State private var renameText = ""
+    @State private var isFoldersSectionExpanded = true
+    @State private var isTagsSectionExpanded = true
 
     var body: some View {
         List(selection: $state.sidebarSelection) {
@@ -51,7 +53,7 @@ struct SidebarView: View {
             }
 
             // Folders
-            Section {
+            Section(isExpanded: $isFoldersSectionExpanded) {
                 ForEach(state.folders) { folder in
                     if renamingFolder?.id == folder.id {
                         TextField("Folder name", text: $renameText)
@@ -92,6 +94,7 @@ struct SidebarView: View {
                         .onSubmit {
                             if !newFolderName.isEmpty {
                                 state.createFolder(name: newFolderName)
+                                isFoldersSectionExpanded = true
                             }
                             newFolderName = ""
                             isAddingFolder = false
@@ -115,7 +118,7 @@ struct SidebarView: View {
             }
 
             // Tags
-            Section {
+            Section(isExpanded: $isTagsSectionExpanded) {
                 ForEach(state.tags) { tag in
                     Label {
                         HStack {
@@ -149,6 +152,7 @@ struct SidebarView: View {
                             .onSubmit {
                                 if !newTagName.isEmpty {
                                     state.createTag(name: newTagName, color: newTagColor)
+                                    isTagsSectionExpanded = true
                                 }
                                 newTagName = ""
                                 isAddingTag = false

@@ -130,6 +130,9 @@ public final class AppState: ObservableObject {
         mdSync.write(t, folderName: folderName)
         reload()
         selectedTranscription = transcriptions.first { $0.id == t.id }
+        if let folderId {
+            sidebarSelection = .folder(folderId)
+        }
     }
 
     func updateTranscription(_ t: Transcription) {
@@ -165,11 +168,13 @@ public final class AppState: ObservableObject {
 
     // MARK: - Folder CRUD
 
-    public func createFolder(name: String) {
+    @discardableResult
+    public func createFolder(name: String) -> Folder {
         let f = Folder(id: UUID(), name: name, sortOrder: folders.count, createdAt: Date())
         db.insertFolder(f)
         mdSync.createFolderDir(name)
         reload()
+        return f
     }
 
     func renameFolder(_ folder: Folder, to name: String) {

@@ -57,12 +57,7 @@ struct RecordingView: View {
                             TextField("New folder name...", text: $newFolderName)
                                 .textFieldStyle(.roundedBorder)
                                 .onSubmit {
-                                    if !newFolderName.isEmpty {
-                                        state.createFolder(name: newFolderName)
-                                        selectedFolderId = state.folders.first { $0.name == newFolderName }?.id
-                                    }
-                                    newFolderName = ""
-                                    isCreatingFolder = false
+                                    commitPendingFolderCreation()
                                 }
                             Button("Cancel") {
                                 isCreatingFolder = false
@@ -169,6 +164,7 @@ struct RecordingView: View {
                 if recorder.isRecording {
                     stopAndTranscribe()
                 } else {
+                    commitPendingFolderCreation()
                     recorder.startRecording()
                 }
             } label: {
@@ -210,7 +206,17 @@ struct RecordingView: View {
         }
     }
 
+    private func commitPendingFolderCreation() {
+        guard isCreatingFolder, !newFolderName.isEmpty else { return }
+        let folder = state.createFolder(name: newFolderName)
+        selectedFolderId = folder.id
+        newFolderName = ""
+        isCreatingFolder = false
+    }
+
     private func stopAndTranscribe() {
+        commitPendingFolderCreation()
+
         guard let audioURL = recorder.stopRecording() else {
             errorMessage = "No audio recorded"
             return
