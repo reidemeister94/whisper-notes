@@ -10,6 +10,7 @@ excluded:
 disabled_rules:
   - todo
   - blanket_disable_command
+  - opening_brace
 
 opt_in_rules:
   - empty_count
