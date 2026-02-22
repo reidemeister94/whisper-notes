@@ -15,21 +15,37 @@ struct SidebarView: View {
             List(selection: $state.sidebarSelection) {
                 // Favorites (smart folders)
                 Section("Favorites") {
-                    sidebarRow("All Transcriptions", icon: "tray.full", iconColor: .blue,
-                               count: state.transcriptions.count)
-                        .tag(SidebarSelection.all)
+                    sidebarRow(
+                        "All Transcriptions",
+                        icon: "tray.full",
+                        iconColor: .blue,
+                        count: state.transcriptions.count
+                    )
+                    .tag(SidebarSelection.all)
 
-                    sidebarRow("Favorites", icon: "star.fill", iconColor: .yellow,
-                               count: state.transcriptions.filter(\.isFavorite).count)
-                        .tag(SidebarSelection.favorites)
+                    sidebarRow(
+                        "Favorites",
+                        icon: "star.fill",
+                        iconColor: .yellow,
+                        count: state.transcriptions.filter(\.isFavorite).count
+                    )
+                    .tag(SidebarSelection.favorites)
 
-                    sidebarRow("Recent", icon: "clock", iconColor: .green,
-                               count: recentCount)
-                        .tag(SidebarSelection.recent)
+                    sidebarRow(
+                        "Recent",
+                        icon: "clock",
+                        iconColor: .green,
+                        count: recentCount
+                    )
+                    .tag(SidebarSelection.recent)
 
-                    sidebarRow("Uncategorized", icon: "archivebox", iconColor: .gray,
-                               count: state.transcriptions.filter { $0.folderId == nil }.count)
-                        .tag(SidebarSelection.folder(UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+                    sidebarRow(
+                        "Uncategorized",
+                        icon: "archivebox",
+                        iconColor: .gray,
+                        count: state.transcriptions.filter { $0.folderId == nil }.count
+                    )
+                    .tag(SidebarSelection.folder(UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
                 }
 
                 // Folders
@@ -45,19 +61,23 @@ struct SidebarView: View {
                                     renamingFolder = nil
                                 }
                         } else {
-                            sidebarRow(folder.name, icon: "folder.fill", iconColor: .blue,
-                                       count: folder.transcriptionCount)
-                                .tag(SidebarSelection.folder(folder.id))
-                                .contextMenu {
-                                    Button("Rename") {
-                                        renameText = folder.name
-                                        renamingFolder = folder
-                                    }
-                                    Divider()
-                                    Button("Delete", role: .destructive) {
-                                        state.deleteFolder(folder)
-                                    }
+                            sidebarRow(
+                                folder.name,
+                                icon: "folder.fill",
+                                iconColor: .blue,
+                                count: folder.transcriptionCount
+                            )
+                            .tag(SidebarSelection.folder(folder.id))
+                            .contextMenu {
+                                Button("Rename") {
+                                    renameText = folder.name
+                                    renamingFolder = folder
                                 }
+                                Divider()
+                                Button("Delete", role: .destructive) {
+                                    state.deleteFolder(folder)
+                                }
+                            }
                         }
                     }
 
@@ -115,8 +135,10 @@ struct SidebarView: View {
                                     Button {
                                         newTagColor = color
                                     } label: {
-                                        Label(color == newTagColor ? "Selected" : "",
-                                              systemImage: color == newTagColor ? "checkmark.circle.fill" : "circle.fill")
+                                        Label(
+                                            color == newTagColor ? "Selected" : "",
+                                            systemImage: color == newTagColor ? "checkmark.circle.fill" : "circle.fill"
+                                        )
                                     }
                                     .tint(Color(hex: color))
                                 }

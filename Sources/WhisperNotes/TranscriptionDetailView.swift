@@ -4,8 +4,8 @@ import UniformTypeIdentifiers
 struct TranscriptionDetailView: View {
     let transcription: Transcription
     @EnvironmentObject var state: AppState
-    @State private var editTitle: String = ""
-    @State private var editContent: String = ""
+    @State private var editTitle = ""
+    @State private var editContent = ""
     @State private var editingId: UUID?
     @State private var showTagPicker = false
     @FocusState private var isContentFocused: Bool
@@ -172,7 +172,7 @@ struct TranscriptionDetailView: View {
             editingId = transcription.id
             loadFields()
         }
-        .onChange(of: transcription.id) { oldId, newId in
+        .onChange(of: transcription.id) { _, newId in
             if let prevId = editingId, prevId != newId {
                 autoSavePrevious(prevId: prevId)
             }
@@ -399,16 +399,18 @@ struct TagPickerView: View {
 struct FlowLayout: Layout {
     var spacing: CGFloat = 4
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
         let result = arrange(proposal: proposal, subviews: subviews)
         return result.size
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
         let result = arrange(proposal: proposal, subviews: subviews)
         for (index, position) in result.positions.enumerated() {
-            subviews[index].place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
-                                  proposal: .unspecified)
+            subviews[index].place(
+                at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
+                proposal: .unspecified
+            )
         }
     }
 
@@ -422,7 +424,7 @@ struct FlowLayout: Layout {
 
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > maxWidth && x > 0 {
+            if x + size.width > maxWidth, x > 0 {
                 x = 0
                 y += rowHeight + spacing
                 rowHeight = 0

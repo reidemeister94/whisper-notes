@@ -1,0 +1,45 @@
+--swiftversion 5.9
+
+# Indentation
+--indent 4
+--indentcase false
+--ifdef no-indent
+--xcodeindentation disabled
+
+# Wrapping
+--maxwidth 140
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--wrapconditions after-first
+--closingparen balanced
+
+# Spacing
+--operatorfunc spaced
+--ranges spaced
+--trimwhitespace always
+
+# Braces
+--allman false
+
+# Trailing commas
+--commas always
+
+# Semicolons
+--semicolons never
+
+# Self
+--self remove
+
+# Imports
+--importgrouping testable-last
+
+# Redundancy
+--redundanttype inferred
+
+# Exclusions
+--exclude .build,.swiftpm,Package.swift
+
+# Disable rules that conflict with SwiftLint or cause excessive churn
+--disable blankLinesAtStartOfScope
+--disable blankLinesAtEndOfScope

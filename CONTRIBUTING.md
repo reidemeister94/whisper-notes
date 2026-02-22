@@ -4,24 +4,35 @@ Thanks for your interest in contributing! Here's how to get started.
 
 ## Development Setup
 
-1. **Requirements:** macOS 14+, Xcode 15+ (or Swift 5.9+ toolchain), Apple Silicon Mac
+1. **Requirements:** macOS 14+, Xcode 15+ (or Swift 5.9+ toolchain), Apple Silicon Mac, Homebrew
 2. **Clone the repo:**
    ```bash
    git clone https://github.com/YOUR_USERNAME/whisper-notes.git
    cd whisper-notes
    ```
-3. **Build:**
+3. **Set up dev environment** (installs SwiftLint, SwiftFormat, pre-commit hooks):
    ```bash
-   swift build
+   make setup-dev-env
    ```
-4. **Run the app bundle:**
+4. **Build:**
    ```bash
-   ./build.sh
+   make build
+   ```
+5. **Run tests:**
+   ```bash
+   make test
+   ```
+6. **Run the app bundle:**
+   ```bash
+   make app-bundle
    open WhisperNotes.app
    ```
 
 ## Code Style
 
+- **Linting**: SwiftLint checks are enforced via pre-commit hooks. Run manually with `make lint`.
+- **Formatting**: SwiftFormat runs automatically on commit. Run manually with `make format`.
+- **Commits**: Follow [Conventional Commits](https://www.conventionalcommits.org/) format (enforced by commitizen).
 - Follow standard Swift conventions and the existing code patterns
 - Use SwiftUI for all UI work
 - Keep `AppState` as the single source of truth — don't create additional ObservableObjects
@@ -55,7 +66,7 @@ When filing an issue, include:
 Here are some areas where help is welcome:
 
 - **Intel Mac support** — currently builds for arm64 only
-- **Localization** — the app defaults to Italian for transcription language; making this configurable in the UI
+- **Localization** — UI strings for additional languages beyond English
 - **Tests** — unit tests for `Database`, `MarkdownSync`, and `WhisperService`
 - **Accessibility** — VoiceOver support and accessibility labels
 - **Audio playback** — playing back recorded audio from the detail view

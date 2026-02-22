@@ -99,9 +99,9 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(appState.filteredTranscriptions.count, 1)
     }
 
-    func testFilteredTranscriptionsByFolder() {
+    func testFilteredTranscriptionsByFolder() throws {
         appState.createFolder(name: "Work")
-        let folderId = appState.folders.first!.id
+        let folderId = try XCTUnwrap(appState.folders.first?.id)
         appState.createTranscription(title: "InFolder", content: "", folderId: folderId, duration: 0, audioFilename: nil)
         appState.createTranscription(title: "NoFolder", content: "", folderId: nil, duration: 0, audioFilename: nil)
         appState.sidebarSelection = .folder(folderId)
@@ -109,20 +109,20 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(appState.filteredTranscriptions[0].title, "InFolder")
     }
 
-    func testFilteredTranscriptionsUncategorized() {
+    func testFilteredTranscriptionsUncategorized() throws {
         appState.createFolder(name: "Work")
-        let folderId = appState.folders.first!.id
+        let folderId = try XCTUnwrap(appState.folders.first?.id)
         appState.createTranscription(title: "InFolder", content: "", folderId: folderId, duration: 0, audioFilename: nil)
         appState.createTranscription(title: "NoFolder", content: "", folderId: nil, duration: 0, audioFilename: nil)
-        let uncategorizedId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+        let uncategorizedId = try XCTUnwrap(UUID(uuidString: "00000000-0000-0000-0000-000000000000"))
         appState.sidebarSelection = .folder(uncategorizedId)
         XCTAssertEqual(appState.filteredTranscriptions.count, 1)
         XCTAssertEqual(appState.filteredTranscriptions[0].title, "NoFolder")
     }
 
-    func testFilteredTranscriptionsByTag() {
+    func testFilteredTranscriptionsByTag() throws {
         appState.createTag(name: "Important", color: "#FF453A")
-        let tag = appState.tags.first!
+        let tag = try XCTUnwrap(appState.tags.first)
         appState.createTranscription(title: "A", content: "", folderId: nil, duration: 0, audioFilename: nil)
         appState.createTranscription(title: "B", content: "", folderId: nil, duration: 0, audioFilename: nil)
         appState.addTag(tag, to: appState.transcriptions[0])
@@ -191,37 +191,37 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(appState.sidebarSelection, .all)
     }
 
-    func testAddTagToTranscription() {
+    func testAddTagToTranscription() throws {
         appState.createTag(name: "T", color: "#FF453A")
         appState.createTranscription(title: "A", content: "", folderId: nil, duration: 0, audioFilename: nil)
         let tag = appState.tags[0]
         let t = appState.transcriptions[0]
         appState.addTag(tag, to: t)
-        let updated = appState.transcriptions.first { $0.id == t.id }!
+        let updated = try XCTUnwrap(appState.transcriptions.first { $0.id == t.id })
         XCTAssertEqual(updated.tags.count, 1)
         XCTAssertEqual(updated.tags[0].name, "T")
     }
 
-    func testRemoveTagFromTranscription() {
+    func testRemoveTagFromTranscription() throws {
         appState.createTag(name: "T", color: "#FF453A")
         appState.createTranscription(title: "A", content: "", folderId: nil, duration: 0, audioFilename: nil)
         let tag = appState.tags[0]
         appState.addTag(tag, to: appState.transcriptions[0])
-        let updated = appState.transcriptions.first { $0.id == appState.transcriptions[0].id }!
+        let updated = try XCTUnwrap(appState.transcriptions.first { $0.id == appState.transcriptions[0].id })
         appState.removeTag(tag, from: updated)
-        let final_ = appState.transcriptions[0]
-        XCTAssertTrue(final_.tags.isEmpty)
+        let result = appState.transcriptions[0]
+        XCTAssertTrue(result.tags.isEmpty)
     }
 
-    func testAddDuplicateTagDoesNothing() {
+    func testAddDuplicateTagDoesNothing() throws {
         appState.createTag(name: "T", color: "#FF453A")
         appState.createTranscription(title: "A", content: "", folderId: nil, duration: 0, audioFilename: nil)
         let tag = appState.tags[0]
         appState.addTag(tag, to: appState.transcriptions[0])
-        let updated = appState.transcriptions.first { $0.id == appState.transcriptions[0].id }!
+        let updated = try XCTUnwrap(appState.transcriptions.first { $0.id == appState.transcriptions[0].id })
         appState.addTag(tag, to: updated)
-        let final_ = appState.transcriptions[0]
-        XCTAssertEqual(final_.tags.count, 1)
+        let result = appState.transcriptions[0]
+        XCTAssertEqual(result.tags.count, 1)
     }
 
     // MARK: - Helpers

@@ -11,7 +11,7 @@ final class Database {
         }
         let dir = support.appendingPathComponent("WhisperNotes", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        self.path = dir.appendingPathComponent("whisper-notes.db").path
+        path = dir.appendingPathComponent("whisper-notes.db").path
         openAndConfigure()
     }
 
@@ -108,8 +108,13 @@ final class Database {
         return f
     }()
 
-    private func dateStr(_ date: Date) -> String { Self.iso.string(from: date) }
-    private func parseDate(_ s: String?) -> Date { s.flatMap { Self.iso.date(from: $0) } ?? Date() }
+    private func dateStr(_ date: Date) -> String {
+        Self.iso.string(from: date)
+    }
+
+    private func parseDate(_ s: String?) -> Date {
+        s.flatMap { Self.iso.date(from: $0) } ?? Date()
+    }
 
     // MARK: - Folders
 

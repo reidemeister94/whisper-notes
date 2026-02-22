@@ -29,16 +29,16 @@ public final class AppState: ObservableObject {
 
     public init() {
         let defaults = UserDefaults.standard
-        self.whisperPath = defaults.string(forKey: "whisperPath") ?? WhisperService.defaultWhisperPath
-        self.modelPath = defaults.string(forKey: "modelPath") ?? WhisperService.defaultModelPath
-        self.language = defaults.string(forKey: "language") ?? "auto"
-        self.hasCompletedSetup = defaults.bool(forKey: "hasCompletedSetup")
+        whisperPath = defaults.string(forKey: "whisperPath") ?? WhisperService.defaultWhisperPath
+        modelPath = defaults.string(forKey: "modelPath") ?? WhisperService.defaultModelPath
+        language = defaults.string(forKey: "language") ?? "auto"
+        hasCompletedSetup = defaults.bool(forKey: "hasCompletedSetup")
 
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let notes = defaults.string(forKey: "notesPath") ?? "\(home)/Documents/Whisper Notes"
-        self.notesPath = notes
-        self.db = Database()
-        self.mdSync = MarkdownSync(baseURL: URL(fileURLWithPath: notes))
+        notesPath = notes
+        db = Database()
+        mdSync = MarkdownSync(baseURL: URL(fileURLWithPath: notes))
 
         reload()
     }
@@ -46,10 +46,10 @@ public final class AppState: ObservableObject {
     init(db: Database, mdSync: MarkdownSync, hasCompletedSetup: Bool = true) {
         self.db = db
         self.mdSync = mdSync
-        self.whisperPath = WhisperService.defaultWhisperPath
-        self.modelPath = WhisperService.defaultModelPath
-        self.notesPath = mdSync.baseURL.path
-        self.language = "auto"
+        whisperPath = WhisperService.defaultWhisperPath
+        modelPath = WhisperService.defaultModelPath
+        notesPath = mdSync.baseURL.path
+        language = "auto"
         self.hasCompletedSetup = hasCompletedSetup
         reload()
     }
@@ -84,18 +84,18 @@ public final class AppState: ObservableObject {
         case .all, nil:
             break
         case .favorites:
-            list = list.filter { $0.isFavorite }
+            list = list.filter(\.isFavorite)
         case .recent:
             let cutoff = Date().addingTimeInterval(-7 * 86400)
             list = list.filter { $0.createdAt >= cutoff }
-        case .folder(let id):
+        case let .folder(id):
             // Special UUID = "Uncategorized" (no folder)
             if id == UUID(uuidString: "00000000-0000-0000-0000-000000000000") {
                 list = list.filter { $0.folderId == nil }
             } else {
                 list = list.filter { $0.folderId == id }
             }
-        case .tag(let id):
+        case let .tag(id):
             list = list.filter { t in t.tags.contains { $0.id == id } }
         }
 
@@ -248,7 +248,7 @@ public final class AppState: ObservableObject {
     // MARK: - Helpers
 
     func folderName(for id: UUID?) -> String? {
-        guard let id = id else { return nil }
+        guard let id else { return nil }
         return folders.first { $0.id == id }?.name
     }
 }

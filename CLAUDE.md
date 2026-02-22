@@ -13,6 +13,21 @@ swift test               # Run all 95 tests
 ./build.sh               # Build .app bundle (release + codesign)
 ```
 
+## Developer Tooling
+
+```bash
+make setup-dev-env   # Install SwiftLint, SwiftFormat, pre-commit hooks
+make lint            # Run SwiftLint
+make lint-fix        # Run SwiftLint with auto-fix
+make format          # Run SwiftFormat (auto-fix)
+make help            # Show all targets
+```
+
+- **Pre-commit** runs trailing-whitespace, end-of-file-fixer, SwiftLint, SwiftFormat on every commit
+- **Commitizen** enforces conventional commit messages (commit-msg hook)
+- **SwiftLint** config: `.swiftlint.yml` (line_length 140, includes Sources/ and Tests/)
+- **SwiftFormat** config: `.swiftformat` (4-space indent, maxwidth 140, trailing commas)
+
 ## Project Structure
 
 - `Sources/WhisperNotes/` — library target (WhisperNotesLib) — all application source code

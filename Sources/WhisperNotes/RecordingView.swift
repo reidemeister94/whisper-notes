@@ -126,12 +126,14 @@ struct RecordingView: View {
 
             // Errors
             if recorder.permissionDenied {
-                Label("Microphone access denied. Check System Settings.",
-                      systemImage: "mic.slash")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 8)
+                Label(
+                    "Microphone access denied. Check System Settings.",
+                    systemImage: "mic.slash"
+                )
+                .font(.caption)
+                .foregroundStyle(.red)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 8)
             } else if let error = errorMessage {
                 Text(error)
                     .font(.caption)
@@ -156,7 +158,7 @@ struct RecordingView: View {
 
             if recorder.isRecording {
                 HStack(spacing: 4) {
-                    ForEach(0..<5, id: \.self) { i in
+                    ForEach(0 ..< 5, id: \.self) { i in
                         RecordingBar(index: i)
                     }
                 }
@@ -236,9 +238,9 @@ struct RecordingBar: View {
             .onAppear {
                 withAnimation(
                     .easeInOut(duration: 0.4 + Double(index) * 0.1)
-                    .repeatForever(autoreverses: true)
+                        .repeatForever(autoreverses: true)
                 ) {
-                    height = CGFloat.random(in: 8...24)
+                    height = CGFloat.random(in: 8 ... 24)
                 }
             }
     }

@@ -12,17 +12,19 @@ struct Transcription: Identifiable, Hashable {
     var updatedAt: Date
     var tags: [Tag]
 
-    // Include updatedAt so SwiftUI detects content changes and re-renders
+    /// Include updatedAt so SwiftUI detects content changes and re-renders
     static func == (lhs: Transcription, rhs: Transcription) -> Bool {
         lhs.id == rhs.id
-        && lhs.title == rhs.title
-        && lhs.isFavorite == rhs.isFavorite
-        && lhs.folderId == rhs.folderId
-        && lhs.updatedAt == rhs.updatedAt
-        && lhs.tags == rhs.tags
+            && lhs.title == rhs.title
+            && lhs.isFavorite == rhs.isFavorite
+            && lhs.folderId == rhs.folderId
+            && lhs.updatedAt == rhs.updatedAt
+            && lhs.tags == rhs.tags
     }
 
-    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 struct Folder: Identifiable, Hashable {
@@ -30,7 +32,7 @@ struct Folder: Identifiable, Hashable {
     var name: String
     var sortOrder: Int
     var createdAt: Date
-    var transcriptionCount: Int = 0
+    var transcriptionCount = 0
 }
 
 struct Tag: Identifiable, Hashable {
@@ -55,13 +57,17 @@ enum SidebarSelection: Hashable {
 struct SupportedLanguage: Identifiable, Hashable {
     let code: String
     let name: String
-    var id: String { code }
+    var id: String {
+        code
+    }
 
     static func == (lhs: SupportedLanguage, rhs: SupportedLanguage) -> Bool {
         lhs.code == rhs.code
     }
 
-    func hash(into hasher: inout Hasher) { hasher.combine(code) }
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(code)
+    }
 
     static let all: [SupportedLanguage] = [
         SupportedLanguage(code: "auto", name: "Auto-detect"),

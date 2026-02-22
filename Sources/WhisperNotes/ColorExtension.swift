@@ -12,7 +12,9 @@ extension Color {
             g = Double((int >> 8) & 0xFF) / 255.0
             b = Double(int & 0xFF) / 255.0
         default:
-            r = 0; g = 0; b = 0
+            r = 0
+            g = 0
+            b = 0
         }
         self.init(red: r, green: g, blue: b)
     }

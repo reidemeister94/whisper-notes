@@ -33,7 +33,7 @@ struct MarkdownSync {
         let filename = sanitize(transcription.title) + ".md"
         let fileURL = dir.appendingPathComponent(filename)
 
-        var lines: [String] = ["---"]
+        var lines = ["---"]
         lines.append("id: \(transcription.id.uuidString)")
         lines.append("date: \(Self.iso.string(from: transcription.createdAt))")
         if !transcription.tags.isEmpty {
@@ -91,7 +91,7 @@ struct MarkdownSync {
     // MARK: - Helpers
 
     private func resolveDir(_ folderName: String?) -> URL {
-        if let folderName = folderName, !folderName.isEmpty {
+        if let folderName, !folderName.isEmpty {
             return baseURL.appendingPathComponent(sanitize(folderName), isDirectory: true)
         }
         return baseURL

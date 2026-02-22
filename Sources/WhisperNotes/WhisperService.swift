@@ -3,7 +3,7 @@ import Foundation
 struct WhisperService {
     var whisperPath: String
     var modelPath: String
-    var language: String = "auto"
+    var language = "auto"
     var timeoutSeconds: TimeInterval = 300
 
     static var defaultWhisperPath: String {
@@ -51,7 +51,8 @@ struct WhisperService {
 
                     guard process.terminationStatus == 0 else {
                         continuation.resume(throwing: WhisperError.processFailed(
-                            "whisper-cli exited with code \(process.terminationStatus)"))
+                            "whisper-cli exited with code \(process.terminationStatus)"
+                        ))
                         return
                     }
 
@@ -77,9 +78,9 @@ enum WhisperError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .cliNotFound(let p): return "whisper-cli not found at: \(p)"
-        case .modelNotFound(let p): return "Model not found at: \(p)"
-        case .processFailed(let msg): return "Transcription failed: \(msg)"
+        case let .cliNotFound(p): "whisper-cli not found at: \(p)"
+        case let .modelNotFound(p): "Model not found at: \(p)"
+        case let .processFailed(msg): "Transcription failed: \(msg)"
         }
     }
 }

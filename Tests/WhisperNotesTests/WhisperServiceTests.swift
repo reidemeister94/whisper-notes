@@ -33,7 +33,7 @@ final class WhisperServiceTests: XCTestCase {
             _ = try await service.transcribe(audioURL: URL(fileURLWithPath: "/tmp/test.wav"))
             XCTFail("Should have thrown")
         } catch let error as WhisperError {
-            if case .cliNotFound(let path) = error {
+            if case let .cliNotFound(path) = error {
                 XCTAssertEqual(path, "/nonexistent/whisper-cli")
             } else {
                 XCTFail("Expected cliNotFound, got \(error)")
@@ -56,7 +56,7 @@ final class WhisperServiceTests: XCTestCase {
             _ = try await service.transcribe(audioURL: URL(fileURLWithPath: "/tmp/test.wav"))
             XCTFail("Should have thrown")
         } catch let error as WhisperError {
-            if case .modelNotFound(let path) = error {
+            if case let .modelNotFound(path) = error {
                 XCTAssertEqual(path, "/nonexistent/model.bin")
             } else {
                 XCTFail("Expected modelNotFound, got \(error)")

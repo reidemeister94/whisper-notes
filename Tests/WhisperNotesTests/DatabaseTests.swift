@@ -76,7 +76,7 @@ final class DatabaseTests: XCTestCase {
     func testFolderTranscriptionCount() {
         let folder = Folder(id: UUID(), name: "F", sortOrder: 0, createdAt: Date())
         db.insertFolder(folder)
-        for i in 0..<3 {
+        for i in 0 ..< 3 {
             db.insertTranscription(makeTranscription(title: "T\(i)", folderId: folder.id))
         }
         let fetched = db.fetchFolders()
