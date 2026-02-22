@@ -1,6 +1,6 @@
 # WhisperNotes
 
-[![CI](https://github.com/silviopavanetto/whisper-notes/actions/workflows/ci.yml/badge.svg)](https://github.com/silviopavanetto/whisper-notes/actions/workflows/ci.yml)
+[![CI](https://github.com/reidemeister94/whisper-notes/actions/workflows/ci.yml/badge.svg)](https://github.com/reidemeister94/whisper-notes/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-brightgreen.svg)](https://www.apple.com/macos/sonoma/)
 [![Swift 5.9](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
@@ -51,7 +51,7 @@ You'll configure these in WhisperNotes settings.
 
 ```bash
 # Clone the repo
-git clone https://github.com/silviopavanetto/whisper-notes.git
+git clone https://github.com/reidemeister94/whisper-notes.git
 cd whisper-notes
 
 # Build the app bundle
