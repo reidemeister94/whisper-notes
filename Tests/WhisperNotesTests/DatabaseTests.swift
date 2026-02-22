@@ -216,6 +216,38 @@ final class DatabaseTests: XCTestCase {
         XCTAssertEqual(fetched[0].folderId, folder.id)
     }
 
+    // MARK: - Edge cases
+
+    func testInsertTranscriptionWithNilFolder() {
+        let t = makeTranscription(folderId: nil)
+        db.insertTranscription(t)
+        let fetched = db.fetchTranscriptions()
+        XCTAssertEqual(fetched.count, 1)
+        XCTAssertNil(fetched[0].folderId)
+    }
+
+    func testFetchTranscriptionsWithNoTags() {
+        let t = makeTranscription()
+        db.insertTranscription(t)
+        let fetched = db.fetchTranscriptions()
+        XCTAssertTrue(fetched[0].tags.isEmpty)
+    }
+
+    func testDeleteNonExistentFolder() {
+        db.deleteFolder(UUID()) // Should not crash
+        XCTAssertTrue(db.fetchFolders().isEmpty)
+    }
+
+    func testDeleteNonExistentTag() {
+        db.deleteTag(UUID()) // Should not crash
+        XCTAssertTrue(db.fetchTags().isEmpty)
+    }
+
+    func testDeleteNonExistentTranscription() {
+        db.deleteTranscription(UUID()) // Should not crash
+        XCTAssertTrue(db.fetchTranscriptions().isEmpty)
+    }
+
     // MARK: - Helpers
 
     private func makeTranscription(

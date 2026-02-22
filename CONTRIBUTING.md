@@ -7,7 +7,7 @@ Thanks for your interest in contributing! Here's how to get started.
 1. **Requirements:** macOS 14+, Xcode 15+ (or Swift 5.9+ toolchain), Apple Silicon Mac, Homebrew
 2. **Clone the repo:**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/whisper-notes.git
+   git clone https://github.com/silviopavanetto/whisper-notes.git
    cd whisper-notes
    ```
 3. **Set up dev environment** (installs SwiftLint, SwiftFormat, pre-commit hooks):
@@ -52,6 +52,8 @@ Thanks for your interest in contributing! Here's how to get started.
 2. Include steps to test the change manually
 3. Keep the diff small and reviewable
 4. Make sure `swift build` succeeds with no warnings
+5. Make sure `swift test` passes — CI runs automatically on every PR
+6. Make sure `make lint` passes (no SwiftLint violations)
 
 ## Reporting Issues
 
@@ -68,7 +70,6 @@ Here are some areas where help is welcome:
 - **Intel Mac support** — currently builds for arm64 only
 - **Localization** — UI strings for additional languages beyond English
 - **Tests** — unit tests for `Database`, `MarkdownSync`, and `WhisperService`
-- **Accessibility** — VoiceOver support and accessibility labels
 - **Audio playback** — playing back recorded audio from the detail view
 - **Import** — importing existing audio files for transcription
 

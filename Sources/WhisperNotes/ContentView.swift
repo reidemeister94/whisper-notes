@@ -58,6 +58,19 @@ public struct ContentView: View {
         } message: { folder in
             Text("Delete folder \"\(folder.name)\"? Transcriptions will be moved to Uncategorized.")
         }
+        .alert(
+            "Error",
+            isPresented: Binding(
+                get: { state.errorMessage != nil },
+                set: { if !$0 { state.errorMessage = nil } }
+            )
+        ) {
+            Button("OK") { state.errorMessage = nil }
+        } message: {
+            if let msg = state.errorMessage {
+                Text(msg)
+            }
+        }
     }
 }
 

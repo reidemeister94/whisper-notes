@@ -52,7 +52,11 @@ struct MarkdownSync {
         lines.append("")
 
         let text = lines.joined(separator: "\n")
-        try? text.write(to: fileURL, atomically: true, encoding: .utf8)
+        do {
+            try text.write(to: fileURL, atomically: true, encoding: .utf8)
+        } catch {
+            print("MarkdownSync: failed to write \(fileURL.lastPathComponent): \(error)")
+        }
     }
 
     // MARK: - Delete

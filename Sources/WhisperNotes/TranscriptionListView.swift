@@ -25,6 +25,7 @@ struct TranscriptionListView: View {
                                 .font(.body)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Clear search")
                     }
                 }
                 .padding(.horizontal, 10)
@@ -45,6 +46,7 @@ struct TranscriptionListView: View {
                 }
                 .buttonStyle(.plain)
                 .help("New Recording")
+                .accessibilityLabel("New Recording")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -144,6 +146,7 @@ struct TranscriptionRow: View {
                     Image(systemName: "star.fill")
                         .font(.caption)
                         .foregroundStyle(.yellow)
+                        .accessibilityLabel("Favorite")
                 }
             }
 

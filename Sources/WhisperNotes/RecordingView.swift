@@ -30,6 +30,7 @@ struct RecordingView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(recorder.isRecording || state.isTranscribing)
+                .accessibilityLabel("Close")
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
@@ -186,6 +187,12 @@ struct RecordingView: View {
             }
             .buttonStyle(.plain)
             .disabled(recorder.permissionDenied)
+            .accessibilityLabel(recorder.isRecording ? "Stop recording" : "Start recording")
+            .accessibilityHint(
+                recorder.isRecording
+                    ? "Stops recording and begins transcription"
+                    : "Starts audio recording"
+            )
 
             Text(recorder.isRecording ? "Click to stop" : "Click to record")
                 .font(.caption)

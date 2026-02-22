@@ -283,4 +283,102 @@ final class AppStateTests: XCTestCase {
         let fileURL = tempDir.appendingPathComponent("ToDelete.md")
         XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
     }
+
+    // MARK: - createTag returns Tag
+
+    func testCreateTagReturnsTag() {
+        let tag = appState.createTag(name: "Returned", color: "#FF453A")
+        XCTAssertEqual(tag.name, "Returned")
+        XCTAssertEqual(tag.color, "#FF453A")
+        XCTAssertEqual(appState.tags.count, 1)
+        XCTAssertEqual(appState.tags[0].id, tag.id)
+    }
+
+    // MARK: - Input validation
+
+    func testCreateFolderTrimsWhitespace() {
+        let folder = appState.createFolder(name: "  Spaces  ")
+        XCTAssertEqual(folder.name, "Spaces")
+    }
+
+    func testCreateFolderEmptyNameUsesDefault() {
+        let folder = appState.createFolder(name: "   ")
+        XCTAssertEqual(folder.name, "New Folder")
+    }
+
+    func testCreateFolderTruncatesLongName() {
+        let longName = String(repeating: "A", count: 300)
+        let folder = appState.createFolder(name: longName)
+        XCTAssertEqual(folder.name.count, 200)
+    }
+
+    func testRenameFolderRejectsEmptyName() {
+        appState.createFolder(name: "Original")
+        let folder = appState.folders[0]
+        appState.renameFolder(folder, to: "   ")
+        XCTAssertEqual(appState.folders[0].name, "Original")
+    }
+
+    func testCreateTagTrimsWhitespace() {
+        let tag = appState.createTag(name: "  Spaces  ", color: "#FF453A")
+        XCTAssertEqual(tag.name, "Spaces")
+    }
+
+    func testCreateTagTruncatesLongName() {
+        let longName = String(repeating: "B", count: 100)
+        let tag = appState.createTag(name: longName, color: "#FF453A")
+        XCTAssertEqual(tag.name.count, 50)
+    }
+
+    // MARK: - Drag and drop
+
+    func testHandleDropMovesTranscription() throws {
+        appState.createFolder(name: "Target")
+        let folderId = try XCTUnwrap(appState.folders.first?.id)
+        appState.createTranscription(title: "Drag Me", content: "", folderId: nil, duration: 0, audioFilename: nil)
+        let t = appState.transcriptions[0]
+        let result = appState.handleDrop(uuidStrings: [t.id.uuidString], targetFolderId: folderId)
+        XCTAssertTrue(result)
+        XCTAssertEqual(appState.transcriptions[0].folderId, folderId)
+    }
+
+    func testHandleDropWithInvalidUUID() {
+        let result = appState.handleDrop(uuidStrings: ["not-a-uuid"], targetFolderId: nil)
+        XCTAssertTrue(result) // Returns true because array isn't empty, even if no match
+    }
+
+    func testHandleDropWithEmptyArray() {
+        let result = appState.handleDrop(uuidStrings: [], targetFolderId: nil)
+        XCTAssertFalse(result)
+    }
+
+    // MARK: - Delete selected item
+
+    func testDeleteSelectedItemDeletesTranscription() {
+        appState.createTranscription(title: "A", content: "", folderId: nil, duration: 0, audioFilename: nil)
+        appState.selectedTranscription = appState.transcriptions[0]
+        appState.deleteSelectedItem()
+        XCTAssertNotNil(appState.transcriptionToDelete)
+        XCTAssertNil(appState.folderToDelete)
+    }
+
+    func testDeleteSelectedItemDeletesFolder() {
+        appState.createFolder(name: "F")
+        let folder = appState.folders[0]
+        appState.sidebarSelection = .folder(folder.id)
+        appState.selectedTranscription = nil
+        appState.deleteSelectedItem()
+        XCTAssertNotNil(appState.folderToDelete)
+    }
+
+    func testToggleFavoriteSelectedWithNoSelection() {
+        appState.selectedTranscription = nil
+        appState.toggleFavoriteSelected() // Should not crash
+    }
+
+    // MARK: - Error message
+
+    func testErrorMessageInitiallyNil() {
+        XCTAssertNil(appState.errorMessage)
+    }
 }

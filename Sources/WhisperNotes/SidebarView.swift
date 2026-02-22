@@ -114,6 +114,7 @@ struct SidebarView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Add folder")
                 }
             }
 
@@ -194,6 +195,7 @@ struct SidebarView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Add tag")
                 }
             }
         }

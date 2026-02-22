@@ -21,6 +21,9 @@ public final class AppState: ObservableObject {
     @Published var transcriptionToDelete: Transcription?
     @Published var folderToDelete: Folder?
 
+    /// User-facing error message (setting non-nil triggers an alert)
+    @Published var errorMessage: String?
+
     /// Search focus trigger (increment to focus; avoids reset race condition)
     @Published public var searchFocusTrigger = 0
 
@@ -170,19 +173,25 @@ public final class AppState: ObservableObject {
 
     @discardableResult
     public func createFolder(name: String) -> Folder {
-        let f = Folder(id: UUID(), name: name, sortOrder: folders.count, createdAt: Date())
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let safeName = String(trimmed.prefix(200))
+        let finalName = safeName.isEmpty ? "New Folder" : safeName
+        let f = Folder(id: UUID(), name: finalName, sortOrder: folders.count, createdAt: Date())
         db.insertFolder(f)
-        mdSync.createFolderDir(name)
+        mdSync.createFolderDir(finalName)
         reload()
         return f
     }
 
     func renameFolder(_ folder: Folder, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let safeName = String(trimmed.prefix(200))
+        guard !safeName.isEmpty else { return }
         let oldName = folder.name
         var updated = folder
-        updated.name = name
+        updated.name = safeName
         db.updateFolder(updated)
-        mdSync.renameFolderDir(from: oldName, to: name)
+        mdSync.renameFolderDir(from: oldName, to: safeName)
         reload()
     }
 
@@ -195,10 +204,14 @@ public final class AppState: ObservableObject {
 
     // MARK: - Tag CRUD
 
-    func createTag(name: String, color: String) {
-        let t = Tag(id: UUID(), name: name, color: color)
+    @discardableResult
+    func createTag(name: String, color: String) -> Tag {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let safeName = String(trimmed.prefix(50))
+        let t = Tag(id: UUID(), name: safeName.isEmpty ? "Untitled Tag" : safeName, color: color)
         db.insertTag(t)
         reload()
+        return t
     }
 
     func deleteTag(_ tag: Tag) {
@@ -229,14 +242,22 @@ public final class AppState: ObservableObject {
         service.language = languageOverride ?? language
 
         guard let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            errorMessage = "Cannot access Application Support directory."
             isTranscribing = false
             return
         }
         let audioDir = supportDir.appendingPathComponent("WhisperNotes/Audio", isDirectory: true)
-        try? FileManager.default.createDirectory(at: audioDir, withIntermediateDirectories: true)
-        let audioFilename = "\(UUID().uuidString).wav"
-        let permanentURL = audioDir.appendingPathComponent(audioFilename)
-        try? FileManager.default.copyItem(at: audioURL, to: permanentURL)
+        var audioFilename: String?
+        do {
+            try FileManager.default.createDirectory(at: audioDir, withIntermediateDirectories: true)
+            let filename = "\(UUID().uuidString).wav"
+            let permanentURL = audioDir.appendingPathComponent(filename)
+            try FileManager.default.copyItem(at: audioURL, to: permanentURL)
+            audioFilename = filename
+        } catch {
+            print("Audio file storage error: \(error)")
+            // Non-fatal: transcription can still proceed, audio just won't be saved permanently
+        }
 
         Task {
             do {
@@ -247,6 +268,7 @@ public final class AppState: ObservableObject {
                 )
             } catch {
                 print("Transcription error: \(error)")
+                errorMessage = "Transcription failed: \(error.localizedDescription)"
                 createTranscription(
                     title: title, content: "[Transcription failed: \(error.localizedDescription)]",
                     folderId: folderId, duration: duration, audioFilename: audioFilename

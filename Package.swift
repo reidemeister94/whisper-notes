@@ -8,7 +8,6 @@ let package = Package(
         .target(
             name: "WhisperNotesLib",
             path: "Sources/WhisperNotes",
-            exclude: ["WhisperNotesApp.swift"],
             linkerSettings: [
                 .linkedLibrary("sqlite3"),
             ]

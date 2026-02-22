@@ -1,6 +1,11 @@
 # WhisperNotes
 
-A native macOS app for recording audio and transcribing it to text using [whisper.cpp](https://github.com/ggerganov/whisper.cpp). Organize your transcriptions into folders, tag them, search across everything, and export to Markdown
+[![CI](https://github.com/silviopavanetto/whisper-notes/actions/workflows/ci.yml/badge.svg)](https://github.com/silviopavanetto/whisper-notes/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![macOS 14+](https://img.shields.io/badge/macOS-14%2B-brightgreen.svg)](https://www.apple.com/macos/sonoma/)
+[![Swift 5.9](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
+
+A native macOS app for recording audio and transcribing it to text using [whisper.cpp](https://github.com/ggerganov/whisper.cpp). Organize your transcriptions into folders, tag them, search across everything, and export to Markdown.
 
 > Built with Swift and SwiftUI. No Electron, no web views — just a fast, native Mac experience.
 
@@ -46,7 +51,7 @@ You'll configure these in WhisperNotes settings.
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/whisper-notes.git
+git clone https://github.com/silviopavanetto/whisper-notes.git
 cd whisper-notes
 
 # Build the app bundle
@@ -81,22 +86,7 @@ The settings view shows green/red indicators for whether each file is found.
 
 ## Architecture
 
-```
-Sources/WhisperNotes/
-├── WhisperNotesApp.swift       # @main entry point, window & menu setup
-├── ContentView.swift           # Root 3-column NavigationSplitView
-├── SidebarView.swift           # Left: folders, tags, smart folders
-├── TranscriptionListView.swift # Middle: filterable transcription list
-├── TranscriptionDetailView.swift # Right: editor, metadata, actions
-├── RecordingView.swift         # Modal recording dialog with waveform
-├── SettingsView.swift          # Preferences window
-├── AppState.swift              # Centralized state (ObservableObject)
-├── Models.swift                # Transcription, Folder, Tag, SidebarSelection
-├── Database.swift              # SQLite layer (WAL mode, foreign keys)
-├── WhisperService.swift        # whisper-cli subprocess wrapper
-├── MarkdownSync.swift          # Filesystem Markdown read/write
-└── ColorExtension.swift        # Hex color parsing
-```
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed diagrams and component descriptions.
 
 **Key design decisions:**
 - **No external dependencies** — uses only system frameworks (SwiftUI, AVFoundation, SQLite3)

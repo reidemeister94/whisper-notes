@@ -96,6 +96,7 @@ struct TranscriptionDetailView: View {
                     }
                     .menuStyle(.borderlessButton)
                     .frame(width: 32)
+                    .accessibilityLabel("More options")
                 }
             }
             .padding(.horizontal, 20)
@@ -253,6 +254,7 @@ struct ToolbarIconButton: View {
         }
         .buttonStyle(.plain)
         .help(help)
+        .accessibilityLabel(help)
     }
 }
 
@@ -303,6 +305,7 @@ struct TagPickerView: View {
                                 .font(.system(size: 8, weight: .bold))
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Remove \(tag.name)")
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
@@ -381,10 +384,8 @@ struct TagPickerView: View {
             state.addTag(existing, to: transcription)
         } else {
             let color = Tag.presetColors.randomElement() ?? Tag.presetColors[4]
-            state.createTag(name: name, color: color)
-            if let newTag = state.tags.first(where: { $0.name.lowercased() == name.lowercased() }) {
-                state.addTag(newTag, to: transcription)
-            }
+            let newTag = state.createTag(name: name, color: color)
+            state.addTag(newTag, to: transcription)
         }
         inputText = ""
     }
