@@ -59,8 +59,9 @@ final class AudioRecorder: NSObject, ObservableObject {
             startTime = Date()
             elapsedTime = 0
             timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+                guard let self else { return }
                 Task { @MainActor in
-                    guard let self, let start = self.startTime else { return }
+                    guard let start = self.startTime else { return }
                     self.elapsedTime = Date().timeIntervalSince(start)
                 }
             }
