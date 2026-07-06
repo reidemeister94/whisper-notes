@@ -26,3 +26,12 @@ Drag-and-drop:
 - Transcription rows use `.draggable(transcription)`; folder rows and "Uncategorized" use `.dropDestination(for: String.self)`.
 - Drop handling is centralized in `AppState.handleDrop(uuidStrings:targetFolderId:)`.
 - The "Uncategorized" sentinel is `SidebarSelection.uncategorizedFolderID` — use this constant, never the raw UUID string.
+
+Recording UI:
+- The main record control uses a stable `ZStack` with tap handling on the whole control; keep the large hit target when changing styling.
+- Before starting/stopping, commit pending new-folder text so clicking the record button does not lose folder creation.
+- Voxtral streaming text appears while recording; Cohere/Whisper transcribe after stop.
+
+Settings UI:
+- Engine names come from `TranscriptionEngine.displayName`; descriptions come from `settingsDescription`.
+- Adding an engine requires updating `TranscriptionEngine`, `SupportedLanguage.all(for:)`, the Settings section, and the `recordAndTranscribe` switch.

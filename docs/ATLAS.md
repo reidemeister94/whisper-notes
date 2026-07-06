@@ -10,6 +10,7 @@
 | 0003 | 2026-02-22 | macOS keyboard shortcuts & drag-and-drop | active | — |
 | 0004 | 2026-02-22 | Fix: sidebar folder not appearing after creation | active | — |
 | 0005 | 2026-02-22 | First-launch welcome dialog (Apple-style) | active | — |
+| 0006 | 2026-07-06 | Cohere Transcribe engine & recording smoke test | active | — |
 
 ## Plans
 | # | Date | Title | Status | WHY |

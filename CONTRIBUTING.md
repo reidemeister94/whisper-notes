@@ -37,7 +37,7 @@ Thanks for your interest in contributing! Here's how to get started.
 - Use SwiftUI for all UI work
 - Keep `AppState` as the single source of truth — don't create additional ObservableObjects
 - Use raw SQLite3 API (no ORM) — match the existing `Database.swift` patterns
-- No external dependencies unless absolutely necessary
+- Keep transcription local-first; avoid user-managed background services unless there is no native or bundled alternative
 
 ## Making Changes
 
@@ -69,7 +69,7 @@ Here are some areas where help is welcome:
 
 - **Intel Mac support** — currently builds for arm64 only
 - **Localization** — UI strings for additional languages beyond English
-- **Tests** — unit tests for `Database`, `MarkdownSync`, and `WhisperService`
+- **Tests** — unit tests for `Database`, `MarkdownSync`, `WhisperService`, `CohereService`, and `VoxtralService`
 - **Audio playback** — playing back recorded audio from the detail view
 - **Import** — importing existing audio files for transcription
 

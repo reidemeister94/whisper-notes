@@ -20,19 +20,21 @@ Think critically from first principles; prize simplicity above all. Maximize eff
 
 Always use the `development-skills` plugin for every task on this project (brainstorming, development, bug fixing, new feature, ...). If the plugin is not available on the user's system, notice it and tell the user to download it.
 
-Native macOS app (Swift/SwiftUI): audio recording + transcription via whisper.cpp. SQLite is the sole source of truth, with one-way Markdown filesystem sync. No external dependencies — only SwiftUI, AVFoundation, SQLite3.
+Native macOS app (Swift/SwiftUI): audio recording, local transcription, organization, and Markdown export. SQLite is the sole source of truth; Markdown sync is one-way app -> filesystem.
 
-- Build: `swift build` · `swift build -c release` · `./build.sh` (signed .app bundle). Test: `swift test` (96 tests). Lint/format: `make lint` · `make format` (SwiftLint 140-col, SwiftFormat 4-space, 140). `make setup-dev-env` installs hooks.
+- Build: `swift build` · `swift build -c release` · `./build.sh` (signed .app bundle). Test: `swift test`. Lint/format: `make lint` · `make format` (SwiftLint/SwiftFormat 140-col). `make setup-dev-env` installs hooks.
 - Pre-commit hooks (trailing-whitespace, end-of-file-fixer, SwiftLint, SwiftFormat) + commitizen conventional-commit messages run on every commit. Do not `--no-verify`.
 - Platform: macOS 14+ (Sonoma), Apple Silicon (arm64), Swift 5.9+.
 - Data: DB + audio in `~/Library/Application Support/WhisperNotes/`; Markdown in `~/Documents/Whisper Notes/` (configurable in Settings).
 - Testability: library/executable split — `@testable import WhisperNotesLib`; `Database(path:)` and `AppState(db:mdSync:)` accept injection for temp DBs.
-- In progress: migrating whisper.cpp → Voxtral streaming STT (voxtral.c C interop). Shipped code still uses `whisper-cli`. See `docs/plans/0001__2026-04-06__implementation_plan__voxtral-realtime-stt.md`.
+- Engines: `whisper.cpp` subprocess, Cohere Transcribe via bundled Python backend, Voxtral realtime via vendored `Cvoxtral`.
+- Cohere is self-contained in `Sources/WhisperNotes/Resources/CohereBackend`; never reference the standalone `italian-transcriber` project from this app.
+- `AudioRecorder` uses an input-node tap + `AVAudioConverter` to 16kHz mono Float32 while writing 16-bit WAV; avoid mixer-based capture (it recorded silence).
+- `build.sh` must copy `WhisperNotes_WhisperNotesLib.bundle` into `WhisperNotes.app/Contents/Resources` and verify `CohereBackend/cohere_transcribe.py`.
+- In progress: Voxtral realtime STT (`Cvoxtral`) remains tracked by `docs/plans/0001__2026-04-06__implementation_plan__voxtral-realtime-stt.md`.
 - Maps & deeper docs: `docs/ATLAS.md` (decisions + plans), `ARCHITECTURE.md` (diagrams, DB schema, component map), `CONTRIBUTING.md`.
-
-## Rules
 
 | Rule | Scope (paths:) | Topic |
 |------|----------------|-------|
-| `.agents/rules/architecture.md` | `Sources/**`, `Tests/**` | State / DB / markdown-sync / process patterns, key files |
+| `.agents/rules/architecture.md` | `Sources/**`, `Tests/**` | State, DB, markdown sync, engine adapters, key files |
 | `.agents/rules/ui-conventions.md` | `Sources/**` | SwiftUI pitfalls, keyboard shortcuts, drag-and-drop |

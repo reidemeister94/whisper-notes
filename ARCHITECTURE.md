@@ -11,17 +11,19 @@ graph TB
         AS["AppState<br/>(ObservableObject)"]
         DB["Database<br/>(SQLite3)"]
         MD["MarkdownSync<br/>(Filesystem)"]
-        WS["WhisperService<br/>(whisper-cli)"]
+        TE["Transcription Engines<br/>Whisper / Cohere / Voxtral"]
         AR["AudioRecorder<br/>(AVFoundation)"]
     end
 
     UI -->|reads/writes| AS
     AS -->|CRUD| DB
     AS -->|write .md| MD
-    AS -->|transcribe| WS
+    AS -->|transcribe| TE
     UI -->|record| AR
 
-    WS -->|subprocess| CLI["whisper-cli<br/>(external binary)"]
+    TE -->|subprocess| CLI["whisper-cli"]
+    TE -->|subprocess| CH["Bundled Cohere backend"]
+    TE -->|C interop| VX["Cvoxtral"]
     DB -->|WAL mode| SQLite["whisper-notes.db"]
     MD -->|files| FS["~/Documents/Whisper Notes/"]
 ```
@@ -34,7 +36,7 @@ sequenceDiagram
     participant RecordingView
     participant AudioRecorder
     participant AppState
-    participant WhisperService
+    participant Engines
     participant Database
     participant MarkdownSync
 
@@ -44,8 +46,8 @@ sequenceDiagram
     RecordingView->>AudioRecorder: stopRecording()
     AudioRecorder-->>RecordingView: audio URL
     RecordingView->>AppState: recordAndTranscribe()
-    AppState->>WhisperService: transcribe(audioURL)
-    WhisperService-->>AppState: transcribed text
+    AppState->>Engines: transcribe(audioURL)
+    Engines-->>AppState: transcribed text
     AppState->>Database: insertTranscription()
     AppState->>MarkdownSync: write(.md file)
     AppState-->>User: Show in list
@@ -59,13 +61,15 @@ sequenceDiagram
 | **Database** | `Database.swift` | Raw SQLite3 C API wrapper. WAL journal mode for concurrent reads. Foreign keys enforced. |
 | **MarkdownSync** | `MarkdownSync.swift` | One-way sync (app -> filesystem). Writes `.md` files with YAML frontmatter. Non-critical — DB is source of truth. |
 | **WhisperService** | `WhisperService.swift` | Runs `whisper-cli` as a subprocess via Foundation `Process`. Handles timeout and output parsing. |
-| **AudioRecorder** | `AudioRecorder.swift` | AVAudioRecorder wrapper. Records 16kHz mono WAV (required by whisper.cpp). Manages microphone permissions. |
+| **CohereService** | `CohereService.swift` | Runs the bundled Cohere backend script with the configured Python executable. |
+| **VoxtralService** | `VoxtralService.swift` | Wraps the vendored `Cvoxtral` streaming and batch transcription API. |
+| **AudioRecorder** | `AudioRecorder.swift` | AVAudioEngine input tap. Converts to 16kHz mono Float32, writes 16-bit WAV, exposes buffers for streaming. |
 | **ContentView** | `ContentView.swift` | Root 3-column NavigationSplitView. Hosts delete confirmation alerts and error alerts. |
 | **SidebarView** | `SidebarView.swift` | Left column: smart folders (All, Favorites, Recent, Uncategorized), user folders, tags. Drag-drop targets. |
 | **TranscriptionListView** | `TranscriptionListView.swift` | Middle column: filtered list with search bar. Draggable rows. Context menus. |
 | **TranscriptionDetailView** | `TranscriptionDetailView.swift` | Right column: title editor, content editor, metadata bar, tag management, export. Auto-saves on selection change. |
-| **RecordingView** | `RecordingView.swift` | Modal sheet for recording. Folder picker, language override, waveform animation. |
-| **SettingsView** | `SettingsView.swift` | Preferences window: whisper-cli path, model path, notes folder, language. |
+| **RecordingView** | `RecordingView.swift` | Modal sheet for recording. Folder picker, language override, waveform animation, Voxtral streaming text. |
+| **SettingsView** | `SettingsView.swift` | Preferences window: engine selection, engine-specific setup, notes folder, language. |
 | **LanguageSetupView** | `LanguageSetupView.swift` | First-launch onboarding for language selection. |
 
 ## Database Schema
@@ -129,11 +133,11 @@ graph LR
     Views -->|@EnvironmentObject| UI
 ```
 
-All views access AppState via `@EnvironmentObject`. There are no additional ViewModels or ObservableObjects.
+Views access shared state via `AppState` as `@EnvironmentObject`. View-scoped helpers such as `AudioRecorder` may be `ObservableObject`; do not add parallel ViewModels for shared app state.
 
 ## Key Design Decisions
 
-1. **No external dependencies** — Only system frameworks (SwiftUI, AVFoundation, SQLite3). This keeps the build fast, reduces attack surface, and simplifies contributor onboarding.
+1. **Local-first transcription** — Engine execution happens on the user's Mac. Optional model downloads and Python dependencies are configured explicitly in Settings.
 
 2. **Raw SQLite3 over ORM** — Full control over queries, no abstraction overhead. WAL mode enables concurrent reads. Batch tag query (`fetchAllTranscriptionTags`) prevents N+1 problems.
 
@@ -145,17 +149,21 @@ All views access AppState via `@EnvironmentObject`. There are no additional View
 
 6. **Keyboard shortcuts via counter trigger** — `searchFocusTrigger` uses increment (not boolean) to avoid SwiftUI `@FocusState` race conditions when triggered from menu commands.
 
+7. **Self-contained Cohere integration** — Cohere backend files are bundled as `WhisperNotesLib` resources. Product code must not depend on the standalone prototype project.
+
 ## File Layout
 
 ```
 Sources/
   WhisperNotes/          # Library target (WhisperNotesLib)
     AppState.swift
+    AudioRecorder.swift
+    CohereService.swift
     Database.swift
     Models.swift
+    VoxtralService.swift
     WhisperService.swift
     MarkdownSync.swift
-    AudioRecorder.swift
     ColorExtension.swift
     ContentView.swift
     SidebarView.swift
@@ -164,6 +172,8 @@ Sources/
     RecordingView.swift
     SettingsView.swift
     LanguageSetupView.swift
+    Resources/CohereBackend/
+  Cvoxtral/              # Vendored Voxtral C target
   WhisperNotesApp/       # Executable target (WhisperNotes)
     WhisperNotesApp.swift  # @main entry point
 Tests/
