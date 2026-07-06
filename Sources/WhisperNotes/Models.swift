@@ -110,7 +110,8 @@ struct SupportedLanguage: Identifiable, Hashable {
         hasher.combine(code)
     }
 
-    static let all: [SupportedLanguage] = [
+    /// All languages supported by Whisper (superset)
+    static let whisperLanguages: [SupportedLanguage] = [
         SupportedLanguage(code: "auto", name: "Auto-detect"),
         SupportedLanguage(code: "en", name: "English"),
         SupportedLanguage(code: "it", name: "Italian"),
@@ -143,7 +144,58 @@ struct SupportedLanguage: Identifiable, Hashable {
         SupportedLanguage(code: "th", name: "Thai"),
     ]
 
+    /// Languages supported by Voxtral Mini 4B Realtime (13 + auto)
+    static let voxtralLanguages: [SupportedLanguage] = [
+        SupportedLanguage(code: "auto", name: "Auto-detect"),
+        SupportedLanguage(code: "ar", name: "Arabic"),
+        SupportedLanguage(code: "de", name: "German"),
+        SupportedLanguage(code: "en", name: "English"),
+        SupportedLanguage(code: "es", name: "Spanish"),
+        SupportedLanguage(code: "fr", name: "French"),
+        SupportedLanguage(code: "hi", name: "Hindi"),
+        SupportedLanguage(code: "it", name: "Italian"),
+        SupportedLanguage(code: "ja", name: "Japanese"),
+        SupportedLanguage(code: "ko", name: "Korean"),
+        SupportedLanguage(code: "nl", name: "Dutch"),
+        SupportedLanguage(code: "pt", name: "Portuguese"),
+        SupportedLanguage(code: "ru", name: "Russian"),
+        SupportedLanguage(code: "zh", name: "Chinese"),
+    ]
+
+    /// Languages supported by Cohere Transcribe 03-2026.
+    static let cohereLanguages: [SupportedLanguage] = [
+        SupportedLanguage(code: "auto", name: "Italian default"),
+        SupportedLanguage(code: "ar", name: "Arabic"),
+        SupportedLanguage(code: "de", name: "German"),
+        SupportedLanguage(code: "el", name: "Greek"),
+        SupportedLanguage(code: "en", name: "English"),
+        SupportedLanguage(code: "es", name: "Spanish"),
+        SupportedLanguage(code: "fr", name: "French"),
+        SupportedLanguage(code: "it", name: "Italian"),
+        SupportedLanguage(code: "ja", name: "Japanese"),
+        SupportedLanguage(code: "ko", name: "Korean"),
+        SupportedLanguage(code: "nl", name: "Dutch"),
+        SupportedLanguage(code: "pl", name: "Polish"),
+        SupportedLanguage(code: "pt", name: "Portuguese"),
+        SupportedLanguage(code: "vi", name: "Vietnamese"),
+        SupportedLanguage(code: "zh", name: "Chinese"),
+    ]
+
+    /// Returns languages for the given engine
+    static func all(for engine: TranscriptionEngine) -> [SupportedLanguage] {
+        switch engine {
+        case .cohere: cohereLanguages
+        case .whisper: whisperLanguages
+        case .voxtral: voxtralLanguages
+        }
+    }
+
+    /// Legacy accessor — returns Whisper languages (superset)
+    static var all: [SupportedLanguage] {
+        whisperLanguages
+    }
+
     static func named(_ code: String) -> SupportedLanguage? {
-        all.first { $0.code == code }
+        whisperLanguages.first { $0.code == code }
     }
 }

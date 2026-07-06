@@ -1,0 +1,6 @@
+module Cvoxtral {
+    header "voxtral.h"
+    header "voxtral_metal.h"
+    header "voxtral_audio.h"
+    export *
+}

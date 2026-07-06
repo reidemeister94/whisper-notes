@@ -72,7 +72,10 @@ playground.xcworkspace
 # SwiftLint cache
 .swiftlint/
 
-# Claude Code
-.claude/
+# Claude Code — ignore personal notes + local settings, but track the rules symlink
+.claude/*
+!.claude/rules
+.claude/CLAUDE.md
 
-docs/chronicles/
+# Agent context override (personal; replaces shared AGENTS.md)
+AGENTS.override.md

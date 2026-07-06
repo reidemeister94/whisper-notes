@@ -1,4 +1,5 @@
 import AppKit
+import Darwin
 import SwiftUI
 import WhisperNotesLib
 
@@ -17,7 +18,14 @@ struct WhisperNotesApp: App {
             alert.runModal()
             NSApp.terminate(nil)
         }
-        _appState = StateObject(wrappedValue: AppState())
+        let initialAppState = AppState()
+        _appState = StateObject(wrappedValue: initialAppState)
+
+        if CommandLine.arguments.contains("--cohere-recording-smoke-test") {
+            Task { @MainActor in
+                await Self.runSmokeTest(appState: initialAppState)
+            }
+        }
     }
 
     private var isFolderSelected: Bool {
@@ -91,6 +99,22 @@ struct WhisperNotesApp: App {
         Settings {
             SettingsView()
                 .environmentObject(appState)
+        }
+    }
+
+    @MainActor
+    private static func runSmokeTest(appState: AppState) async {
+        do {
+            let result = try await CohereRecordingSmokeTest.run(appState: appState)
+            print("SMOKE_TEST_SUCCESS")
+            print("markdown=\(result.markdownURL.path)")
+            print("transcription=\(result.transcription)")
+            fflush(stdout)
+            Darwin.exit(0)
+        } catch {
+            fputs("SMOKE_TEST_FAILURE: \(error.localizedDescription)\n", stderr)
+            fflush(stderr)
+            Darwin.exit(1)
         }
     }
 }

@@ -18,7 +18,7 @@ Record, transcribe, organize — all on your machine. No cloud. No subscription.
   <img src="docs/images/hero.png" alt="WhisperNotes main window" width="720"/>
 </p>
 
-WhisperNotes is a native macOS app that turns audio recordings into searchable, organized text using [whisper.cpp](https://github.com/ggerganov/whisper.cpp). Built entirely with Swift and SwiftUI — no Electron, no web views, no external dependencies. Just a fast, lightweight Mac app that respects your privacy.
+WhisperNotes is a native macOS app that turns audio recordings into searchable, organized text using local transcription engines such as [whisper.cpp](https://github.com/ggerganov/whisper.cpp). Built with Swift and SwiftUI — no Electron, no web views, no telemetry. Just a fast, lightweight Mac app that respects your privacy.
 
 ---
 
@@ -54,6 +54,7 @@ Every transcription is automatically saved as a `.md` file with YAML frontmatter
 ### And More
 
 - **30 languages** — Set a default or choose per-recording. Auto-detect works great for most cases.
+- **Optional Cohere Transcribe** — High-quality local transcription through a bundled backend. Setup is guided from Settings and runs on your Mac.
 - **Keyboard-driven** — `Cmd+N` record, `Cmd+Shift+N` new folder, `Cmd+S` save, `Cmd+F` search, `Cmd+D` favorite
 - **Edit in place** — Modify titles and transcription text directly in the app with autosave
 - **Smart folders** — All, Favorites, Recent (last 7 days), and Uncategorized — always up to date
@@ -95,7 +96,10 @@ Open **Settings** (`Cmd+,`) and point WhisperNotes to your whisper-cli binary an
 |---------|-------------|---------|
 | whisper-cli path | Path to the `whisper-cli` binary | `~/Documents/whisper.cpp/build/bin/whisper-cli` |
 | Model path | Path to the GGML model file | `~/Documents/whisper.cpp/models/ggml-large-v3-turbo.bin` |
+| Cohere Python executable | Optional Python used by the bundled Cohere backend | App Support virtual environment, or your selected Python |
 | Notes folder | Where Markdown files are saved | `~/Documents/Whisper Notes/` |
+
+For Cohere Transcribe, choose the engine in Settings and copy the setup command shown there. It installs Python dependencies into `~/Library/Application Support/WhisperNotes/CohereBackend/venv`; the model is downloaded by Hugging Face on first use.
 
 ---
 
@@ -104,6 +108,7 @@ Open **Settings** (`Cmd+,`) and point WhisperNotes to your whisper-cli binary an
 - **macOS 14.0+** (Sonoma)
 - **Apple Silicon** (M1/M2/M3/M4)
 - **Xcode 15+** (for building from source)
+- **Optional for Cohere Transcribe:** Python 3.11+, `ffmpeg`, and Hugging Face access to `CohereLabs/cohere-transcribe-03-2026`
 
 ---
 
@@ -155,6 +160,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR guidelines.
 | Transcription timeout | Large files may exceed the 300s default. Check model file integrity. |
 | No audio input | Grant microphone access in System Settings > Privacy & Security > Microphone. |
 | App won't open | Right-click > Open on first launch to bypass Gatekeeper. |
+| Cohere Python not found | Open Settings > Cohere Transcribe, run the setup command, then click "Use app venv". |
+| Cohere model access error | Accept the model terms on Hugging Face and run `hf auth login`. |
 
 ---
 

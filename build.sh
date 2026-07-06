@@ -26,8 +26,19 @@ cp "${BUILD_DIR}/${APP_NAME}" "${CONTENTS}/MacOS/${APP_NAME}"
 cp "Resources/Info.plist" "${CONTENTS}/Info.plist"
 cp "Resources/AppIcon.icns" "${CONTENTS}/Resources/AppIcon.icns"
 
+RESOURCE_BUNDLE="${BUILD_DIR}/${APP_NAME}_WhisperNotesLib.bundle"
+if [ ! -d "${RESOURCE_BUNDLE}" ]; then
+    echo "Error: Resource bundle not found at ${RESOURCE_BUNDLE}"
+    exit 1
+fi
+cp -R "${RESOURCE_BUNDLE}" "${CONTENTS}/Resources/"
+
 # Verify bundle structure
-for f in "${CONTENTS}/MacOS/${APP_NAME}" "${CONTENTS}/Info.plist" "${CONTENTS}/Resources/AppIcon.icns"; do
+for f in \
+    "${CONTENTS}/MacOS/${APP_NAME}" \
+    "${CONTENTS}/Info.plist" \
+    "${CONTENTS}/Resources/AppIcon.icns" \
+    "${CONTENTS}/Resources/${APP_NAME}_WhisperNotesLib.bundle/CohereBackend/cohere_transcribe.py"; do
     if [ ! -f "$f" ]; then
         echo "Error: Missing bundle file: $f"
         exit 1

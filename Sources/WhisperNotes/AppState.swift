@@ -1,6 +1,32 @@
 import Foundation
 import SwiftUI
 
+enum TranscriptionEngine: String, CaseIterable {
+    case whisper
+    case cohere
+    case voxtral
+
+    var displayName: String {
+        switch self {
+        case .cohere: "Cohere Transcribe 03-2026"
+        case .whisper: "Whisper (whisper.cpp)"
+        case .voxtral: "Voxtral Realtime 4B"
+        }
+    }
+
+    var settingsDescription: String {
+        switch self {
+        case .cohere: "Highest-quality local transcription backend for Italian speech."
+        case .whisper: "Classic local whisper.cpp transcription."
+        case .voxtral: "Realtime preview with final batch transcription."
+        }
+    }
+
+    var supportsStreaming: Bool {
+        self == .voxtral
+    }
+}
+
 @MainActor
 public final class AppState: ObservableObject {
     // Data
@@ -17,6 +43,10 @@ public final class AppState: ObservableObject {
     @Published public var showRecording = false
     @Published var isTranscribing = false
 
+    // Streaming transcription (Voxtral real-time)
+    @Published var streamingText = ""
+    @Published var isStreamingTranscription = false
+
     // Delete confirmation (setting non-nil triggers the alert)
     @Published var transcriptionToDelete: Transcription?
     @Published var folderToDelete: Folder?
@@ -27,9 +57,21 @@ public final class AppState: ObservableObject {
     /// Search focus trigger (increment to focus; avoids reset race condition)
     @Published public var searchFocusTrigger = 0
 
-    // Settings
+    /// Engine selection
+    @Published var selectedEngine: TranscriptionEngine
+
+    // Whisper settings
     @Published var whisperPath: String
     @Published var modelPath: String
+
+    /// Cohere settings
+    @Published var coherePythonPath: String
+
+    // Voxtral settings
+    @Published var voxtralModelDir: String
+    @Published var voxtralDelay: Int
+
+    // Common settings
     @Published var notesPath: String
     @Published public var language: String
     @Published public var hasCompletedSetup: Bool
@@ -37,20 +79,44 @@ public final class AppState: ObservableObject {
     let db: Database
     var mdSync: MarkdownSync
 
+    /// Voxtral engine (pre-loaded at app start for instant recording)
+    private var voxtralService: VoxtralService?
+    @Published var isVoxtralLoading = false
+    @Published var isVoxtralReady = false
+
     public init() {
         let defaults = UserDefaults.standard
         whisperPath = defaults.string(forKey: "whisperPath") ?? WhisperService.defaultWhisperPath
         modelPath = defaults.string(forKey: "modelPath") ?? WhisperService.defaultModelPath
+        coherePythonPath = defaults.string(forKey: "coherePythonPath")
+            ?? CohereService.defaultPythonPath
         language = defaults.string(forKey: "language") ?? "auto"
         hasCompletedSetup = defaults.bool(forKey: "hasCompletedSetup")
 
+        // Engine selection
+        let engineRaw = defaults.string(forKey: "selectedEngine") ?? "whisper"
+        selectedEngine = TranscriptionEngine(rawValue: engineRaw) ?? .whisper
+
+        // Voxtral settings
         let home = FileManager.default.homeDirectoryForCurrentUser.path
+        voxtralModelDir = defaults.string(forKey: "voxtralModelDir") ?? "\(home)/Models/voxtral-mini-4b"
+        let savedDelay = defaults.integer(forKey: "voxtralDelay")
+        voxtralDelay = savedDelay == 0 ? 480 : savedDelay
+
         let notes = defaults.string(forKey: "notesPath") ?? "\(home)/Documents/Whisper Notes"
         notesPath = notes
         db = Database()
         mdSync = MarkdownSync(baseURL: URL(fileURLWithPath: notes))
 
+        // Migrate language if not supported by currently selected engine
+        migrateLanguageIfNeeded()
+
         reload()
+
+        // Pre-load Voxtral model in background if selected
+        if selectedEngine == .voxtral {
+            preloadVoxtralModel()
+        }
     }
 
     init(db: Database, mdSync: MarkdownSync, hasCompletedSetup: Bool = true) {
@@ -58,9 +124,13 @@ public final class AppState: ObservableObject {
         self.mdSync = mdSync
         whisperPath = WhisperService.defaultWhisperPath
         modelPath = WhisperService.defaultModelPath
+        coherePythonPath = CohereService.defaultPythonPath
         notesPath = mdSync.baseURL.path
         language = "auto"
         self.hasCompletedSetup = hasCompletedSetup
+        selectedEngine = .whisper
+        voxtralModelDir = ""
+        voxtralDelay = 480
         reload()
     }
 
@@ -74,8 +144,12 @@ public final class AppState: ObservableObject {
         let defaults = UserDefaults.standard
         defaults.set(whisperPath, forKey: "whisperPath")
         defaults.set(modelPath, forKey: "modelPath")
+        defaults.set(coherePythonPath, forKey: "coherePythonPath")
         defaults.set(notesPath, forKey: "notesPath")
         defaults.set(language, forKey: "language")
+        defaults.set(selectedEngine.rawValue, forKey: "selectedEngine")
+        defaults.set(voxtralModelDir, forKey: "voxtralModelDir")
+        defaults.set(voxtralDelay, forKey: "voxtralDelay")
         mdSync = MarkdownSync(baseURL: URL(fileURLWithPath: notesPath))
     }
 
@@ -83,6 +157,18 @@ public final class AppState: ObservableObject {
         UserDefaults.standard.set(true, forKey: "hasCompletedSetup")
         hasCompletedSetup = true
         saveSettings()
+    }
+
+    /// Languages available for the currently selected engine
+    var availableLanguages: [SupportedLanguage] {
+        SupportedLanguage.all(for: selectedEngine)
+    }
+
+    private func migrateLanguageIfNeeded() {
+        let available = SupportedLanguage.all(for: selectedEngine)
+        if !available.contains(where: { $0.code == language }) {
+            language = "auto"
+        }
     }
 
     // MARK: - Filtered transcriptions
@@ -99,7 +185,6 @@ public final class AppState: ObservableObject {
             let cutoff = Date().addingTimeInterval(-7 * 86400)
             list = list.filter { $0.createdAt >= cutoff }
         case let .folder(id):
-            // Special UUID = "Uncategorized" (no folder)
             if id == SidebarSelection.uncategorizedFolderID {
                 list = list.filter { $0.folderId == nil }
             } else {
@@ -139,7 +224,6 @@ public final class AppState: ObservableObject {
     }
 
     func updateTranscription(_ t: Transcription) {
-        // Track old title/folder for .md rename
         let old = transcriptions.first { $0.id == t.id }
         let oldTitle = old?.title
         let oldFolderName = folderName(for: old?.folderId)
@@ -238,8 +322,6 @@ public final class AppState: ObservableObject {
 
     func recordAndTranscribe(title: String, folderId: UUID?, audioURL: URL, duration: TimeInterval, languageOverride: String? = nil) {
         isTranscribing = true
-        var service = WhisperService(whisperPath: whisperPath, modelPath: modelPath)
-        service.language = languageOverride ?? language
 
         guard let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             errorMessage = "Cannot access Application Support directory."
@@ -256,8 +338,64 @@ public final class AppState: ObservableObject {
             audioFilename = filename
         } catch {
             print("Audio file storage error: \(error)")
-            // Non-fatal: transcription can still proceed, audio just won't be saved permanently
         }
+
+        switch selectedEngine {
+        case .cohere:
+            transcribeWithCohere(
+                title: title, folderId: folderId, audioURL: audioURL,
+                duration: duration, audioFilename: audioFilename,
+                languageOverride: languageOverride
+            )
+        case .whisper:
+            transcribeWithWhisper(
+                title: title, folderId: folderId, audioURL: audioURL,
+                duration: duration, audioFilename: audioFilename,
+                languageOverride: languageOverride
+            )
+        case .voxtral:
+            // Finalize on background thread: stop streaming + batch transcribe for quality
+            finalizeVoxtralRecording(
+                title: title, folderId: folderId, audioURL: audioURL,
+                duration: duration, audioFilename: audioFilename
+            )
+        }
+    }
+
+    private func transcribeWithCohere(
+        title: String, folderId: UUID?, audioURL: URL,
+        duration: TimeInterval, audioFilename: String?, languageOverride: String?
+    ) {
+        var service = CohereService(pythonPath: coherePythonPath)
+        service.language = languageOverride ?? language
+
+        Task {
+            do {
+                let text = try await service.transcribe(audioURL: audioURL)
+                createTranscription(
+                    title: title, content: text, folderId: folderId,
+                    duration: duration, audioFilename: audioFilename
+                )
+            } catch {
+                print("Cohere transcription error: \(error)")
+                errorMessage = "Cohere transcription failed: \(error.localizedDescription). "
+                    + "A note was created with the audio file — you can retry transcription later."
+                createTranscription(
+                    title: title, content: "",
+                    folderId: folderId, duration: duration, audioFilename: audioFilename
+                )
+            }
+            isTranscribing = false
+            showRecording = false
+        }
+    }
+
+    private func transcribeWithWhisper(
+        title: String, folderId: UUID?, audioURL: URL,
+        duration: TimeInterval, audioFilename: String?, languageOverride: String?
+    ) {
+        var service = WhisperService(whisperPath: whisperPath, modelPath: modelPath)
+        service.language = languageOverride ?? language
 
         Task {
             do {
@@ -277,6 +415,78 @@ public final class AppState: ObservableObject {
             }
             isTranscribing = false
             showRecording = false
+        }
+    }
+
+    // MARK: - Voxtral
+
+    /// Pre-load Voxtral model in background (~5s for 8.3GB).
+    /// Call at app start or when engine is switched to Voxtral.
+    func preloadVoxtralModel() {
+        guard !isVoxtralLoading, !isVoxtralReady else { return }
+        isVoxtralLoading = true
+
+        let modelDir = voxtralModelDir
+        let delayMs = voxtralDelay
+
+        Task.detached {
+            let service = VoxtralService(modelDir: modelDir, delayMs: delayMs)
+            do {
+                try service.loadModel()
+                await MainActor.run {
+                    self.voxtralService = service
+                    self.isVoxtralReady = true
+                    self.isVoxtralLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.isVoxtralLoading = false
+                    self.errorMessage = "Voxtral model loading failed: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+
+    /// Start Voxtral streaming transcription. Model must be pre-loaded.
+    func startVoxtralStreaming() throws -> VoxtralService {
+        guard let service = voxtralService, service.isModelLoaded else {
+            throw VoxtralError.initFailed
+        }
+        streamingText = ""
+        isStreamingTranscription = true
+        return service
+    }
+
+    /// Append a token to the streaming text (called from token stream consumer).
+    func appendStreamingToken(_ token: String) {
+        streamingText.append(token)
+    }
+
+    /// Finalize Voxtral recording: flush remaining tokens in background, save immediately.
+    func finalizeVoxtralRecording(title: String, folderId: UUID?, audioURL _: URL, duration: TimeInterval, audioFilename: String?) {
+        // Dismiss recording sheet immediately — don't block the UI
+        showRecording = false
+
+        let service = voxtralService
+        let currentStreamText = streamingText
+
+        // Show transcribing state while we flush
+        isTranscribing = true
+        streamingText = ""
+        isStreamingTranscription = false
+
+        Task.detached {
+            // Flush remaining audio through encoder+decoder (blocking, ~2-5s)
+            let finalText = service?.stopStreaming() ?? currentStreamText
+
+            await MainActor.run {
+                let content = finalText.isEmpty ? currentStreamText : finalText
+                self.createTranscription(
+                    title: title, content: content, folderId: folderId,
+                    duration: duration, audioFilename: audioFilename
+                )
+                self.isTranscribing = false
+            }
         }
     }
 
@@ -303,7 +513,6 @@ public final class AppState: ObservableObject {
     }
 
     public func deleteSelectedItem() {
-        // Priority: selected transcription takes precedence over selected folder
         if let transcription = selectedTranscription {
             confirmDeleteTranscription(transcription)
             return

@@ -57,6 +57,17 @@ final class SupportedLanguageTests: XCTestCase {
         XCTAssertEqual(SupportedLanguage.all.count, 30)
     }
 
+    func testCohereLanguagesContainItalian() {
+        let languages = SupportedLanguage.all(for: .cohere)
+        XCTAssertTrue(languages.contains { $0.code == "it" })
+    }
+
+    func testCohereAutoIsItalianDefault() {
+        let languages = SupportedLanguage.all(for: .cohere)
+        XCTAssertEqual(languages.first?.code, "auto")
+        XCTAssertEqual(languages.first?.name, "Italian default")
+    }
+
     func testEqualityUsesCodeOnly() {
         let a = SupportedLanguage(code: "en", name: "English")
         let b = SupportedLanguage(code: "en", name: "Different Name")
