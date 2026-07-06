@@ -46,6 +46,15 @@ caught at commit time, before push.
   without editing it), so `--strict` locally reliably catches this class. Gap remaining:
   a config threshold change could make an untouched file violate — only CI's full-repo
   lint catches that. Acceptable.
+- **2026-07-06**: Once lint passed, CI's **Build** step ran for the first time in a while
+  and revealed a latent break: `Sources/Cvoxtral/voxtral_metal.m` used `MTLCompileOptions.mathMode`
+  / `MTLMathModeFast` — macOS 15 SDK symbols (they replaced the deprecated `fastMathEnabled`).
+  CI's `macos-14` runner SDK lacks them → hard compile error, while local builds passed
+  because (a) the dev SDK is newer and (b) the Cvoxtral target was cached and not recompiled.
+  Fixed with a compile-time SDK guard (`__MAC_OS_X_VERSION_MAX_ALLOWED >= 150000`) plus a
+  runtime `@available(macOS 15.0, *)` so the deployment target (`.macOS(.v14)`) stays honored.
+  Lesson: prior CI reds died at Lint before Build, masking this — a green Lint can uncover
+  the next latent gate.
 
 ---
 

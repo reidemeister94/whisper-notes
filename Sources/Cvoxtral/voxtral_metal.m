@@ -435,7 +435,21 @@ static int init_shaders(void) {
                  encoding:NSUTF8StringEncoding];
 
         MTLCompileOptions *options = [[MTLCompileOptions alloc] init];
-        options.mathMode = MTLMathModeFast;
+        // macOS 15 SDK renamed `fastMathEnabled` -> `mathMode`. Pick the API present in the
+        // build SDK (the macOS 14 CI SDK has only `fastMathEnabled`), and runtime-guard so a
+        // 15-SDK build still runs on the macOS 14 deployment target without an unknown selector.
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 150000
+        if (@available(macOS 15.0, *)) {
+            options.mathMode = MTLMathModeFast;
+        } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+            options.fastMathEnabled = YES;
+#pragma clang diagnostic pop
+        }
+#else
+        options.fastMathEnabled = YES;
+#endif
 
         g_shader_library = [g_device newLibraryWithSource:shaderSource
                                                   options:options
