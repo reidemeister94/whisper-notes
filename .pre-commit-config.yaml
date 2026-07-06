@@ -22,7 +22,7 @@ repos:
       # linter
       - id: swiftlint
         name: SwiftLint
-        entry: swiftlint lint --quiet --force-exclude
+        entry: swiftlint lint --strict --quiet --force-exclude
         language: system
         types: [swift]
       # formatter

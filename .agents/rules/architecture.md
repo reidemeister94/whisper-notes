@@ -30,7 +30,8 @@ Autosave: detail view debounces 3s after the last edit; the timer resets on each
 Key files:
 | File | Role |
 |------|------|
-| `AppState.swift` | Centralized state, engine selection, recording/transcription flow |
+| `AppState.swift` | Centralized state, engine selection, CRUD (transcriptions/folders/tags) |
+| `AppState+Transcription.swift` | Recording/transcription/Voxtral flow (extension; split out to keep both files under SwiftLint `--strict` 500-line / 400-type-body thresholds) |
 | `AudioRecorder.swift` | 16kHz mono capture, WAV persistence, streaming buffer callback |
 | `CohereService.swift` | bundled backend subprocess and setup paths |
 | `VoxtralService.swift` | `Cvoxtral` streaming/batch wrapper |
